@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: "TimeArch Authors"
     given-names: ""
-repository-code: "https://github.com/timearch/timearch"
+repository-code: "https://github.com/ResearchAnonymized/TimeArch"
 license: MIT
 version: "1.0-ecsa-ae"
 date-released: "2026-06-20"
