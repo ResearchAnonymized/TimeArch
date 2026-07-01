@@ -104,7 +104,7 @@ export default function LlmPlayground() {
           setResult({ ...r, latencyMs: Math.round(performance.now() - started) });
         }
       } else {
-        // Catalog model — call via Lovable AI Gateway edge function
+        // Catalog model — call via the LLM API edge function
         const r = await callAuthenticatedFunction<Result>("llm-playground-run", {
           model: selection,
           systemPrompt,
@@ -130,7 +130,7 @@ export default function LlmPlayground() {
             </SelectTrigger>
             <SelectContent>
               <div className="px-2 py-1 text-[10px] uppercase text-muted-foreground font-semibold">
-                Lovable AI Gateway
+                LLM API
               </div>
               {CATALOG.filter((m) => m.modality !== "embedding" && m.modality !== "image").map(
                 (m) => (

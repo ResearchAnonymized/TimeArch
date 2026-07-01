@@ -28,7 +28,7 @@ bun install
 bun run dev                   # http://localhost:5173
 ```
 
-The frontend connects to Lovable Cloud with the publishable anon key in
+The frontend connects to Supabase with the publishable anon key in
 `.env.example`. Sign in, create a project, and walk through the 18-stage
 lifecycle in the workspace.
 

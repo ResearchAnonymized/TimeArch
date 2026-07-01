@@ -1,4 +1,5 @@
-// Run a single prompt against either (a) a Lovable AI Gateway model or
+// Run a single prompt against either (a) a LLM API model or
+import { getLlmApiKey, getLlmChatCompletionsUrl } from "../_shared/llm-config.ts";
 // (b) a user-registered custom endpoint stored in `llm_endpoints`.
 // Admins only.
 
@@ -12,7 +13,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const LLM_API_KEY = Deno.env.get("LLM_API_KEY");
 
 interface Body {
   model?: string;
@@ -72,9 +73,9 @@ Deno.serve(async (req) => {
       apiKey = ep.api_key_secret_name ? Deno.env.get(ep.api_key_secret_name) : undefined;
     } else {
       if (!body.model) return json({ error: "model or endpointId required" }, 400);
-      if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY missing" }, 500);
-      url = "https://ai.gateway.lovable.dev/v1/chat/completions";
-      apiKey = LOVABLE_API_KEY;
+      if (!LLM_API_KEY) return json({ error: "LLM_API_KEY missing" }, 500);
+      url = getLlmChatCompletionsUrl();
+      apiKey = LLM_API_KEY;
       modelId = body.model;
     }
 

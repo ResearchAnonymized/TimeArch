@@ -70,7 +70,7 @@ export default function LlmCatalog() {
     <div className="space-y-6">
       <Card className="p-4 bg-muted/30 border-dashed">
         <p className="text-sm">
-          TimeArch routes every agent call through the <strong>Lovable AI Gateway</strong>. The
+          TimeArch routes every agent call through the configured <strong>LLM API</strong>. The
           catalog below lists every model the pipeline can invoke, the rationale for each, and
           which lifecycle stages or agents use it by default. Admins can register additional
           OpenAI-compatible or local endpoints under <em>Custom Endpoints</em> and <em>Local LLMs</em>.

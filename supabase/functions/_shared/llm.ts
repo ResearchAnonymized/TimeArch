@@ -1,10 +1,10 @@
-// Unified Lovable AI Gateway wrapper.
+// Unified OpenAI-compatible LLM wrapper.
 // Handles auth, JSON-mode requests, retry on 429/5xx, and JSON recovery for
 // models that occasionally wrap responses in prose or code fences.
 //
 // ECSA 2026 Artifact Evaluation note:
 // This module supports an LLM_MODE env switch with three values:
-//   - "live"   (default): call the Lovable AI Gateway as usual.
+//   - "live"   (default): call the configured LLM API as usual.
 //   - "replay": serve responses from a static cassette file
 //               (cassettes/llm-cassette.json). No network call.
 //               Lookup key = sha256(model + JSON(messages) + json-flag).
@@ -15,8 +15,8 @@
 // In "replay" mode a missing key throws a clear error so reviewers know
 // which prompt is uncovered.
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-const ENDPOINT = "https://ai.gateway.lovable.dev/v1/chat/completions";
+import { getLlmApiKey, getLlmChatCompletionsUrl } from "./llm-config.ts";
+
 const LLM_MODE = (Deno.env.get("LLM_MODE") ?? "live").toLowerCase();
 const CASSETTE_PATH =
   Deno.env.get("LLM_CASSETTE_PATH") ?? "/tmp/llm-cassette.json";
@@ -97,7 +97,7 @@ export async function callLlm(messages: LlmMessage[], opts: LlmOptions = {}): Pr
     return { content: hit.content, raw: hit.raw ?? { replay: true } };
   }
 
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not set");
+  const apiKey = getLlmApiKey();
 
   const body: Record<string, unknown> = { model, messages, temperature };
   if (json) body.response_format = { type: "json_object" };
@@ -105,10 +105,10 @@ export async function callLlm(messages: LlmMessage[], opts: LlmOptions = {}): Pr
   let lastErr: unknown = null;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const res = await fetch(ENDPOINT, {
+      const res = await fetch(getLlmChatCompletionsUrl(), {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),

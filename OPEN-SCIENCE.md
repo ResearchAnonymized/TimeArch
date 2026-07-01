@@ -39,7 +39,7 @@ conducted, and what its limits are.
 - `LLM_MODE=replay` (default) — deterministic replay of the shipped cassette,
   no network, no API key. Used by AE reviewers.
 - `LLM_MODE=record` — re-runs the pipeline live and refreshes the cassette.
-- `LLM_MODE=live` — free exploration with a user-supplied `LOVABLE_API_KEY`.
+- `LLM_MODE=live` — free exploration with a user-supplied `LLM_API_KEY`.
 
 ## 4. Threats to validity and limitations
 

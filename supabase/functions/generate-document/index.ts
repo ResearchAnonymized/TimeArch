@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getLlmApiKey, getLlmChatCompletionsUrl } from "../_shared/llm-config.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -201,17 +202,17 @@ CRITICAL: Include mermaid_code diagrams wherever visual representation adds valu
 PROJECT CONTEXT:
 ${JSON.stringify(contextSummary, null, 2)}`;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    const LLM_API_KEY = Deno.env.get("LLM_API_KEY");
+    if (!LLM_API_KEY) {
+      return new Response(JSON.stringify({ error: "LLM_API_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch(getLlmChatCompletionsUrl(), {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${LLM_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

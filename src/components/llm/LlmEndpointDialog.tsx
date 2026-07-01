@@ -163,7 +163,7 @@ export default function LlmEndpointDialog({
                 placeholder="MY_CUSTOM_LLM_KEY"
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Name of a Lovable Cloud secret holding the API key. The Playground edge function
+                Name of a Supabase secret holding the API key. The Playground edge function
                 reads it via <code>Deno.env.get(name)</code>.
               </p>
             </div>

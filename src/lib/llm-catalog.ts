@@ -1,4 +1,4 @@
-// Static catalog of LLMs TimeArch can call through the Lovable AI Gateway.
+// Static catalog of LLMs TimeArch can call through a configured LLM API.
 // Surfaced read-only to every authenticated user (and embedded in the Admin
 // Console "LLM Models" tab). This answers paper reviewer Comment 1.4 by
 // making the model layer fully inspectable in-product.
@@ -169,8 +169,8 @@ export const CATALOG: CatalogModel[] = [
 ];
 
 export const CATALOG_GROUPS: { key: string; label: string; description: string }[] = [
-  { key: "gemini", label: "Google Gemini", description: "Lovable AI Gateway · Google" },
-  { key: "openai", label: "OpenAI GPT", description: "Lovable AI Gateway · OpenAI" },
+  { key: "gemini", label: "Google Gemini", description: "LLM API · Google" },
+  { key: "openai", label: "OpenAI GPT", description: "LLM API · OpenAI" },
   { key: "image", label: "Image / Diagram", description: "Visual artifact generation" },
   { key: "embedding", label: "Embeddings", description: "pgvector RAG index" },
 ];

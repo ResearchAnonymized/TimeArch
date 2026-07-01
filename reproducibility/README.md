@@ -17,19 +17,19 @@ key**.
 
 - `LLM_MODE=replay` — **default for reviewers.** No network, no API key.
   A miss throws a clear error naming the uncovered prompt.
-- `LLM_MODE=live`   — calls the Lovable AI Gateway; needs `LOVABLE_API_KEY`.
+- `LLM_MODE=live`   — calls the configured LLM API; needs `LLM_API_KEY`.
 - `LLM_MODE=record` — calls live AND appends new entries to the cassette.
 
 ## Auto-bootstrap
 
 `scripts/reproduce.sh` will **automatically bootstrap** the bundle the first
 time it runs if (a) the cassette is empty *or* `baseline/` is empty, and
-(b) `LOVABLE_API_KEY` is set. It runs the brownfield pipeline once in
+(b) `LLM_API_KEY` is set. It runs the brownfield pipeline once in
 `record` mode (the remaining 9 repeatability runs are replays against the
 freshly-recorded cassette), then copies the outputs into `baseline/`.
 
 ```bash
-export LOVABLE_API_KEY=sk-...
+export LLM_API_KEY=sk-...
 bash scripts/reproduce.sh                 # auto-bootstrap if needed
 bash scripts/reproduce.sh --bootstrap     # force re-record + re-baseline
 bash scripts/reproduce.sh --no-bootstrap  # never record, even if empty
@@ -43,7 +43,7 @@ After bootstrap, commit `reproducibility/llm-cassette.json` and
 
 ```bash
 export LLM_MODE=record
-export LOVABLE_API_KEY=sk-...
+export LLM_API_KEY=sk-...
 export LLM_CASSETTE_PATH=$PWD/reproducibility/llm-cassette.json
 bash scripts/reproduce.sh
 git add reproducibility/llm-cassette.json reproducibility/baseline/

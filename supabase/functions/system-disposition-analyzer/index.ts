@@ -1,7 +1,8 @@
 // System Disposition Analyzer (Phase 0 — Discovery)
+import { getLlmApiKey, getLlmChatCompletionsUrl } from "../_shared/llm-config.ts";
 // Synthesizes a Modernize-vs-Rebuild verdict from brownfield evidence using
 // the 6R / TIME framework. Three LLM calls (scorecard, component map,
-// rationale) routed through Lovable AI Gateway via the existing prompt
+// rationale) routed through LLM API via the existing prompt
 // resolver so admins can edit the prompts and reviewers can replay results.
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import {
@@ -18,7 +19,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+const LLM_API_KEY = Deno.env.get("LLM_API_KEY")!;
 
 const ok = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), {
@@ -28,11 +29,11 @@ const ok = (b: unknown, s = 200) =>
 
 async function llmJson(system: string, user: string, model: string): Promise<any> {
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await fetch(getLlmChatCompletionsUrl(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${LLM_API_KEY}`,
       },
       body: JSON.stringify({
         model,

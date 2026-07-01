@@ -4,11 +4,11 @@
 # Default: LLM_MODE=replay (no network, no API key).
 #
 # Auto-bootstrap: if the cassette is missing/empty OR the baseline directory
-# is empty, this script can run ONCE in record mode against the live Lovable
+# is empty, this script can run ONCE in record mode against the live LLM API to populate both, then promote the run as the new baseline.
 # AI Gateway to populate both, then promote the run as the new baseline.
 #
 # Bootstrap is triggered when EITHER:
-#   • LOVABLE_API_KEY is set AND cassette is empty / baseline is empty, OR
+#   • LLM_API_KEY is set AND cassette is empty / baseline is empty, OR
 #   • --bootstrap is passed explicitly
 #
 # Pass --no-bootstrap to disable. Pass --force-bootstrap to refresh even if
@@ -57,15 +57,15 @@ ENTRIES="$(cassette_entries)"
 if [ "$BOOTSTRAP_FLAG" = "force" ]; then
   NEED_BOOTSTRAP="yes"
 elif [ "$BOOTSTRAP_FLAG" = "auto" ]; then
-  if { [ "$ENTRIES" -eq 0 ] || baseline_empty; } && [ -n "${LOVABLE_API_KEY:-}" ]; then
+  if { [ "$ENTRIES" -eq 0 ] || baseline_empty; } && [ -n "${LLM_API_KEY:-}" ]; then
     NEED_BOOTSTRAP="yes"
   fi
 fi
 
 if [ "$NEED_BOOTSTRAP" = "yes" ]; then
-  if [ -z "${LOVABLE_API_KEY:-}" ]; then
-    echo "[reproduce] !! bootstrap requested but LOVABLE_API_KEY is not set."
-    echo "[reproduce]    Set it (live Lovable AI Gateway key) and re-run, or use --no-bootstrap."
+  if [ -z "${LLM_API_KEY:-}" ]; then
+    echo "[reproduce] !! bootstrap requested but LLM_API_KEY is not set."
+    echo "[reproduce]    Set it (live configured LLM API key) and re-run, or use --no-bootstrap."
     exit 3
   fi
   echo "[reproduce] ── BOOTSTRAP MODE ────────────────────────────────────────"
@@ -129,7 +129,7 @@ fi
 # ─── 4b. Normal mode: diff against locked baseline ─────────────────────────
 echo "[reproduce] 4/4  Diff against locked baseline"
 if baseline_empty; then
-  echo "  (no baseline yet — run once with LOVABLE_API_KEY set, or pass --bootstrap)"
+  echo "  (no baseline yet — run once with LLM_API_KEY set, or pass --bootstrap)"
 else
   if diff -q "$BASE/brownfield-summary.json" "$OUT/brownfield-summary.json" >/dev/null; then
     echo "  ✓ brownfield-summary.json matches baseline"

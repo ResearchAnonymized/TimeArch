@@ -31,10 +31,10 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
+    const LLM_API_KEY = Deno.env.get("LLM_API_KEY");
+    if (!LLM_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+        JSON.stringify({ error: "LLM_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -92,7 +92,7 @@ serve(async (req) => {
     // evaluate the latest primary recommendation for this stage. Does NOT
     // regenerate the primary recommendation.
     if (options?.challenge_only === true) {
-      return await runChallengeOnly({ supabase, project_id, stage, user_id, LOVABLE_API_KEY });
+      return await runChallengeOnly({ supabase, project_id, stage, user_id, LLM_API_KEY });
     }
 
     const handler = getStageHandler(stage);
@@ -380,7 +380,7 @@ Requirements:
 
       // Use appropriate token limits per stage complexity
       const maxTokens = stage === 16 ? 12000 : stage >= 17 ? 8000 : stage === 6 ? 8000 : undefined;
-      const llm = createLangChainLLM(LOVABLE_API_KEY, undefined, maxTokens);
+      const llm = createLangChainLLM(LLM_API_KEY, undefined, maxTokens);
 
       const { parsed: parsedContent, toolCallingUsed } = await invokeLangChainAgent(
         llm,
@@ -397,7 +397,7 @@ Requirements:
         console.warn(`[Stage ${stage}] First attempt produced ${parsedContent?.parse_error ? "unparseable" : "text-recovered"} output — retrying with reinforced prompt`);
         
         try {
-          const retryLLM = createLangChainLLM(LOVABLE_API_KEY, "google/gemini-2.5-flash", maxTokens);
+          const retryLLM = createLangChainLLM(LLM_API_KEY, "google/gemini-2.5-flash", maxTokens);
           const reinforcedPrompt = `CRITICAL: You MUST respond by calling the "${toolSchema.name}" function with valid JSON arguments. Do NOT respond with plain text. Do NOT wrap your response in markdown code fences. Use the tool/function provided.\n\n${userPrompt}`;
           
           const { parsed: retryParsed, toolCallingUsed: retryToolUsed } = await invokeLangChainAgent(
@@ -489,7 +489,7 @@ REQUIREMENTS COUNT: ${(reqRes.data || []).length}
 
 Now critically evaluate this recommendation. Find weaknesses, blind spots, and alternative approaches.`;
 
-          const challengerLLM = createLangChainLLM(LOVABLE_API_KEY);
+          const challengerLLM = createLangChainLLM(LLM_API_KEY);
           const { parsed: chalParsed } = await invokeLangChainAgent(
             challengerLLM,
             handler.challengerSystemPrompt ?? CHALLENGER_SYSTEM_PROMPT,
@@ -553,7 +553,7 @@ Now critically evaluate this recommendation. Find weaknesses, blind spots, and a
       }
 
       // ─── Log token usage ──────────────────────────────────────────
-      // Note: actual token counts from Lovable AI gateway aren't exposed yet,
+      // Note: actual token counts from LLM API aren't exposed yet,
       // so we estimate based on prompt/response lengths as a rough proxy
       const estimatedPromptTokens = Math.ceil(userPrompt.length / 4);
       const estimatedCompletionTokens = Math.ceil(JSON.stringify(parsedContent).length / 4);
