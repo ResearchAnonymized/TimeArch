@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+title: "TimeArch: A Multi-Agent LLM Lifecycle for Software Architecture"
+message: "If you use this artifact, please cite the accompanying ECSA 2026 industry-track paper."
+type: software
+authors:
+  - family-names: "TimeArch Authors"
+    given-names: ""
+repository-code: "https://github.com/timearch/timearch"
+license: MIT
+version: "1.0-ecsa-ae"
+date-released: "2026-06-20"
+keywords:
+  - software-architecture
+  - multi-agent-systems
+  - large-language-models
+  - rag
+  - iso-29148
+  - atam
+  - architecture-decision-records
+preferred-citation:
+  type: conference-paper
+  title: "TimeArch: A Multi-Agent LLM Lifecycle for Software Architecture Design and Evolution"
+  authors:
+    - family-names: "TimeArch Authors"
+      given-names: ""
+  conference:
+    name: "20th European Conference on Software Architecture (ECSA 2026), Industry Track"
+  year: 2026

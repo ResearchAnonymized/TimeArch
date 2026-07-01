@@ -1,0 +1,157 @@
+import { Fragment, useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import MermaidDiagram from "@/components/project/MermaidDiagram";
+import type { DocumentDraft, DocumentSection, DocumentFigure } from "@/lib/document-editor-types";
+
+/** Render basic markdown (bold, italic, bold-italic, inline code, lists) to HTML */
+function renderMarkdown(text: string): string {
+  let html = text
+    // Escape HTML
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    // Bold + italic
+    .replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>")
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    // Italic
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-muted text-xs font-mono">$1</code>')
+    // Convert markdown list items (- item) to proper bullets
+    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>');
+
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul class="my-2 space-y-1">$1</ul>');
+
+  return html;
+}
+
+interface Props {
+  draft: DocumentDraft;
+}
+
+function SectionPreview({
+  section,
+  figures,
+  depth = 0,
+}: {
+  section: DocumentSection;
+  figures: DocumentFigure[];
+  depth?: number;
+}) {
+  const sectionFigures = figures.filter((f) => f.sectionId === section.id && f.included);
+  const fontSize = depth === 0 ? "text-xl" : depth === 1 ? "text-lg" : "text-base";
+  const headingTag = depth === 0 ? "border-b pb-2 mb-4" : "mb-2";
+
+  return (
+    <div className="mb-6">
+      <h3 className={`font-display font-bold ${fontSize} ${headingTag}`}>
+        <span className="font-mono text-primary/70 mr-2">{section.number}</span>
+        {section.title}
+      </h3>
+
+      {/* Content */}
+      {section.content && (
+        <div
+          className="text-sm text-muted-foreground leading-relaxed mb-3 whitespace-pre-line prose prose-sm max-w-none dark:prose-invert"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(section.content) }}
+        />
+      )}
+
+      {/* Table */}
+      {section.table && section.table.headers?.length > 0 && (
+        <div className="overflow-x-auto mb-4">
+          <table className="w-full text-xs border-collapse rounded-lg overflow-hidden">
+            <thead>
+              <tr>
+                {section.table.headers.map((h, i) => (
+                  <th
+                    key={i}
+                    className="bg-primary/10 border border-border/50 px-3 py-2 text-left font-semibold text-foreground"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(section.table.rows || []).map((row, ri) => (
+                <tr key={ri} className={ri % 2 === 0 ? "" : "bg-muted/20"}>
+                  {row.map((cell, ci) => (
+                    <td
+                      key={ci}
+                      className="border border-border/50 px-3 py-1.5 text-muted-foreground"
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Figures */}
+      {sectionFigures.map((fig, i) => (
+        <div key={fig.id} className="my-4 rounded-lg border bg-muted/10 p-4">
+          <MermaidDiagram code={fig.mermaidCode} title={fig.caption} />
+          <p className="text-center text-xs text-muted-foreground italic mt-2">
+            Figure {fig.order + 1}: {fig.caption}
+          </p>
+        </div>
+      ))}
+
+      {/* Subsections */}
+      {section.subsections?.map((sub) => (
+        <SectionPreview key={sub.id} section={sub} figures={figures} depth={depth + 1} />
+      ))}
+    </div>
+  );
+}
+
+export default function DocumentPreview({ draft }: Props) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Title page simulation */}
+      <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-accent/5 p-8 mb-8 text-center space-y-3">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-primary/60">
+          {draft.standard_reference}
+        </p>
+        <h1 className="text-2xl font-display font-bold text-foreground">{draft.document_title}</h1>
+        <p className="text-base text-muted-foreground">{draft.project_name}</p>
+        <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+          <Badge variant="outline" className="text-[9px]">
+            v{draft.version}
+          </Badge>
+          <span>{draft.date}</span>
+          <Badge variant="outline" className="text-[9px] capitalize">
+            {draft.metadata.status}
+          </Badge>
+        </div>
+        <p className="text-[10px] text-muted-foreground/60 italic">
+          Generated by TimeArch — Architecture Lifecycle Platform
+        </p>
+      </div>
+
+      {/* Executive summary */}
+      {draft.executive_summary && (
+        <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-6 mb-8">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-primary/70 mb-3">
+            Executive Summary
+          </p>
+          <div
+            className="text-sm text-foreground leading-relaxed whitespace-pre-line"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(draft.executive_summary) }}
+          />
+        </div>
+      )}
+
+      {/* Sections */}
+      {draft.sections.map((section) => (
+        <SectionPreview key={section.id} section={section} figures={draft.figures} />
+      ))}
+    </div>
+  );
+}

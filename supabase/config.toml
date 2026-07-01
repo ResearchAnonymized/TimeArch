@@ -1,0 +1,39 @@
+project_id = "yyqbxzcjnpsijkjbfjcg"
+
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.generate-document]
+    verify_jwt = true
+  [functions.handle-email-suppression]
+    verify_jwt = false
+  [functions.handle-email-unsubscribe]
+    verify_jwt = false
+  [functions.preview-transactional-email]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.process-requirements]
+    verify_jwt = true
+  [functions.process-audio-requirements]
+    verify_jwt = true
+  [functions.run-agent]
+    verify_jwt = true
+  [functions.run-agent-v2]
+    verify_jwt = true
+  [functions.seed-knowledge]
+    verify_jwt = false
+  [functions.send-transactional-email]
+    verify_jwt = true
+  [functions.list-prompts]
+    verify_jwt = true
+  [functions.update-prompt]
+    verify_jwt = true
+  [functions.system-disposition-analyzer]
+    verify_jwt = true
+  [functions.issue-api-token]
+    verify_jwt = true
+  [functions.public-api]
+    verify_jwt = false
+  [functions.mcp-server]
+    verify_jwt = false

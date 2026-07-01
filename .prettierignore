@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+coverage
+.lovable
+.vite
+*.min.js
+*.min.css
+public/demo
+src/integrations/supabase/types.ts
+playwright-report
+test-results

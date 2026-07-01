@@ -1,0 +1,52 @@
+{
+  "_purpose": "Golden disposition report for the ShopFlow brownfield demo. Used by ECSA AE reviewers to verify replay-mode reproducibility of Phase 0 — Discovery system disposition analysis.",
+  "project": "ShopFlow (brownfield demo)",
+  "generated_with": "system-disposition-analyzer (LLM_MODE=replay)",
+  "framework": "Gartner 6R / TIME",
+  "overall_verdict": "rearchitect",
+  "confidence": 0.78,
+  "dimension_scores": {
+    "business_fit": { "score": 4.0, "evidence": "ShopFlow still maps to core e-commerce flows; SRS objectives remain valid." },
+    "technical_health": { "score": 2.0, "evidence": "ADR-0001 admits Rails monolith with growing god-controllers; no test coverage in repo bundle." },
+    "change_velocity": { "score": 2.0, "evidence": "No CI/CD workflow detected; deployment runbook is manual per ADR-0007." },
+    "operational_cost": { "score": 2.5, "evidence": "Single MySQL primary; scaling requires vertical bumps (ADR-0007)." },
+    "risk": { "score": 2.0, "evidence": "12 high-severity drift findings between OpenAPI and live endpoints; schema drift on 3 tables." },
+    "strategic_alignment": { "score": 2.5, "evidence": "Org target is event-driven microservices; current monolith diverges materially." }
+  },
+  "component_dispositions": [
+    { "name": "checkout", "disposition": "rebuild", "business_value": 5, "technical_risk": 5, "effort": "L", "rationale": "Highest-value flow with worst drift and tightest coupling." },
+    { "name": "catalog", "disposition": "rearchitect", "business_value": 4, "technical_risk": 4, "effort": "L", "rationale": "Critical read path; split read/write to introduce caching tier." },
+    { "name": "auth", "disposition": "replatform", "business_value": 4, "technical_risk": 3, "effort": "M", "rationale": "Move to managed identity provider; logic is stable." },
+    { "name": "search", "disposition": "rebuild", "business_value": 3, "technical_risk": 4, "effort": "M", "rationale": "MySQL LIKE-based search; replace with dedicated search service." },
+    { "name": "admin-portal", "disposition": "refactor", "business_value": 2, "technical_risk": 3, "effort": "M", "rationale": "Internal tool, low traffic; modernize incrementally." },
+    { "name": "reporting", "disposition": "retire", "business_value": 1, "technical_risk": 2, "effort": "S", "rationale": "Replaced by external BI tool per stakeholder input." },
+    { "name": "notifications", "disposition": "rehost", "business_value": 3, "technical_risk": 2, "effort": "S", "rationale": "Stable worker; move to managed queue." },
+    { "name": "payments-adapter", "disposition": "retain", "business_value": 5, "technical_risk": 1, "effort": "S", "rationale": "Recently rewritten; PCI-scoped; leave alone." }
+  ],
+  "risk_value_matrix": [
+    { "name": "checkout", "x": 5, "y": 5, "disposition": "rebuild", "effort": "L" },
+    { "name": "catalog", "x": 4, "y": 4, "disposition": "rearchitect", "effort": "L" },
+    { "name": "auth", "x": 4, "y": 3, "disposition": "replatform", "effort": "M" },
+    { "name": "search", "x": 3, "y": 4, "disposition": "rebuild", "effort": "M" },
+    { "name": "admin-portal", "x": 2, "y": 3, "disposition": "refactor", "effort": "M" },
+    { "name": "reporting", "x": 1, "y": 2, "disposition": "retire", "effort": "S" },
+    { "name": "notifications", "x": 3, "y": 2, "disposition": "rehost", "effort": "S" },
+    { "name": "payments-adapter", "x": 5, "y": 1, "disposition": "retain", "effort": "S" }
+  ],
+  "effort_estimate": { "S": 3, "M": 3, "L": 2, "XL": 0 },
+  "rationale": {
+    "summary": "ShopFlow's business model remains sound but the Rails monolith carries high technical risk, weak change velocity and material drift between contract and implementation. A targeted re-architect — rebuilding checkout and search, replatforming auth, retaining payments — produces the best risk-adjusted outcome compared to a full ground-up rebuild.",
+    "key_drivers": [
+      { "label": "High business fit, low technical health", "polarity": "negative", "note": "Spread of 2.0 points indicates the system is worth fixing but not in current shape." },
+      { "label": "12 high-severity drift findings", "polarity": "negative", "note": "Contract-vs-implementation gap concentrates in checkout and search." },
+      { "label": "Payments adapter is healthy", "polarity": "positive", "note": "Recent rewrite means PCI-scoped code can be retained, reducing scope." }
+    ],
+    "roadmap": [
+      { "step": 1, "title": "Stabilize: add CI/CD, contract tests, observability", "horizon": "0-3mo" },
+      { "step": 2, "title": "Replatform auth to managed IdP", "horizon": "3-6mo" },
+      { "step": 3, "title": "Rebuild search behind feature flag", "horizon": "3-6mo" },
+      { "step": 4, "title": "Strangler-fig rebuild of checkout", "horizon": "6-12mo" },
+      { "step": 5, "title": "Re-architect catalog into read/write split", "horizon": "12mo+" }
+    ]
+  }
+}

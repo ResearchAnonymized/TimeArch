@@ -1,0 +1,173 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Clean Light Foundation */
+    --background: 210 25% 98%;
+    --foreground: 220 20% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 14%;
+
+    /* Primary Blue – vibrant but readable */
+    --primary: 220 82% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 20% 95%;
+    --secondary-foreground: 220 20% 14%;
+
+    --muted: 215 20% 95%;
+    --muted-foreground: 220 12% 46%;
+
+    --accent: 215 20% 93%;
+    --accent-foreground: 220 20% 14%;
+
+    /* Destructive/Warning */
+    --destructive: 0 76% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success - Emerald */
+    --success: 160 74% 40%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning - Amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Softer dark nav – slate-800 range */
+    --nav: 220 26% 18%;
+    --nav-foreground: 215 30% 94%;
+
+    --border: 216 20% 90%;
+    --input: 216 20% 90%;
+    --ring: 220 82% 56%;
+    --radius: 0.5rem;
+
+    /* Sidebar – softer slate, not pitch black */
+    --sidebar-background: 220 26% 18%;
+    --sidebar-foreground: 215 30% 94%;
+    --sidebar-primary: 220 82% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 22% 24%;
+    --sidebar-accent-foreground: 215 30% 94%;
+    --sidebar-border: 220 20% 26%;
+    --sidebar-ring: 220 82% 56%;
+  }
+
+  .dark {
+    /* Sharp, vibrant dark theme — deeper near-black canvas with brighter
+       elevated surfaces for clear depth, electric blue primary, and
+       saturated accents that pop. Borders are crisp without being harsh. */
+    --background: 222 32% 8%;
+    --foreground: 210 40% 99%;
+    --card: 222 28% 13%;
+    --card-foreground: 210 40% 99%;
+    --popover: 222 28% 13%;
+    --popover-foreground: 210 40% 99%;
+    --primary: 217 100% 65%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 222 22% 18%;
+    --secondary-foreground: 210 40% 99%;
+    --muted: 222 22% 16%;
+    --muted-foreground: 217 20% 78%;
+    --accent: 217 91% 22%;
+    --accent-foreground: 210 40% 99%;
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 84% 55%;
+    --success-foreground: 222 47% 6%;
+    --warning: 38 100% 62%;
+    --warning-foreground: 222 47% 6%;
+    --nav: 222 35% 10%;
+    --nav-foreground: 210 40% 99%;
+    --border: 222 22% 22%;
+    --input: 222 22% 22%;
+    --ring: 217 100% 65%;
+    --sidebar-background: 222 35% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217 100% 65%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 222 28% 17%;
+    --sidebar-accent-foreground: 210 40% 99%;
+    --sidebar-border: 222 22% 20%;
+    --sidebar-ring: 217 100% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+@layer utilities {
+  .text-gradient-brand {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(199, 89%, 48%));
+  }
+
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(to right, hsl(214, 32%, 91%, 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(214, 32%, 91%, 0.3) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .glow-blue {
+    box-shadow:
+      0 0 20px hsl(217, 91%, 60%, 0.15),
+      0 0 60px hsl(217, 91%, 60%, 0.05);
+  }
+
+  /* Suppress Mermaid's native error rendering (bomb icon / syntax error overlay) */
+  #d[id^="dmermaid-"],
+  body > [id^="dmermaid-"],
+  body > [id^="mermaid-"],
+  body > div:not(#root):not([class]) {
+    &:has(.error-icon),
+    &:has(text:only-child) {
+      display: none !important;
+    }
+  }
+
+  .mermaid-error,
+  [id^="mermaid-"] .error-icon,
+  [id^="dmermaid-"] .error-icon {
+    display: none !important;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

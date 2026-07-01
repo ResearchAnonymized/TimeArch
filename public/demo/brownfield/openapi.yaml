@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: ShopFlow Legacy API
+  version: 1.4.2
+  description: Existing e-commerce backend for the ShopFlow monolith (PHP + MySQL, ~2014).
+servers:
+  - url: https://api.shopflow.example.com/v1
+paths:
+  /products:
+    get:
+      summary: List products
+      tags: [Catalog]
+      responses: { '200': { description: OK } }
+    post:
+      summary: Create product (admin)
+      tags: [Catalog]
+      responses: { '201': { description: Created } }
+  /products/{id}:
+    get:
+      summary: Get product
+      tags: [Catalog]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses: { '200': { description: OK } }
+  /cart:
+    get:
+      summary: Get current user's cart
+      tags: [Cart]
+      responses: { '200': { description: OK } }
+  /cart/items:
+    post:
+      summary: Add item to cart
+      tags: [Cart]
+      responses: { '200': { description: OK } }
+  /checkout:
+    post:
+      summary: Checkout cart (synchronous, calls payment + email inline)
+      tags: [Checkout]
+      responses: { '200': { description: OK } }
+  /orders:
+    get:
+      summary: List orders for current user
+      tags: [Orders]
+      responses: { '200': { description: OK } }
+  /orders/{id}:
+    get:
+      summary: Get order
+      tags: [Orders]
+      responses: { '200': { description: OK } }
+  /admin/users:
+    get:
+      summary: List users (admin only, no pagination)
+      tags: [Admin]
+      responses: { '200': { description: OK } }
+  /admin/reports/sales:
+    get:
+      summary: Heavy sales report (runs against prod DB)
+      tags: [Admin]
+      responses: { '200': { description: OK } }
+components:
+  schemas:
+    Product:    { type: object, properties: { id: { type: integer }, name: { type: string }, price_cents: { type: integer } } }
+    CartItem:   { type: object, properties: { product_id: { type: integer }, qty: { type: integer } } }
+    Order:      { type: object, properties: { id: { type: integer }, total_cents: { type: integer }, status: { type: string } } }
+    User:       { type: object, properties: { id: { type: integer }, email: { type: string } } }

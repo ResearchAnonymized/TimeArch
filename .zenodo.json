@@ -1,0 +1,27 @@
+{
+  "title": "TimeArch: A Multi-Agent LLM Lifecycle for Software Architecture (ECSA 2026 AE bundle)",
+  "description": "Reproducibility artifact for the ECSA 2026 industry-track paper 'TimeArch'. Bundles: source code, brownfield demo inputs, locked LLM cassette for deterministic replay, repeatability experiment (N=10), and Docker Compose environment.",
+  "creators": [
+    { "name": "TimeArch Authors" }
+  ],
+  "keywords": [
+    "software architecture",
+    "multi-agent systems",
+    "large language models",
+    "rag",
+    "iso 29148",
+    "atam",
+    "ecsa-2026",
+    "artifact evaluation"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "10.0000/ecsa-2026-timearch",
+      "resource_type": "publication-conferencepaper"
+    }
+  ]
+}
