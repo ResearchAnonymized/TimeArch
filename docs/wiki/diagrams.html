@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeArch — Software Factory Diagrams</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --fg: #e7ecf3;
+      --muted: #9aa7b8;
+      --card: #171d25;
+      --line: #2a3441;
+      --accent: #5b9cff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      background: rgba(15, 20, 25, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    header a { color: var(--accent); text-decoration: none; }
+    header h1 { margin: 0.25rem 0 0; font-size: 1.35rem; }
+    header p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.95rem; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+    nav a {
+      color: var(--fg);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.85rem;
+      background: var(--card);
+    }
+    nav a:hover { border-color: var(--accent); }
+    main { max-width: 980px; margin: 0 auto; padding: 1.5rem; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin: 0 0 1.25rem;
+    }
+    section h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+    .mermaid {
+      background: #0b0f14;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    footer {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="../">← Wiki home</a>
+    <h1>Software Factory Diagrams</h1>
+    <p>RE → TimeArch → Coding via one Orchestrator</p>
+  </header>
+
+  <nav>
+    <a href="#hub">Hub &amp; spoke</a>
+    <a href="#sequence">Sequence</a>
+    <a href="#states">Run states</a>
+    <a href="#packages">Packages</a>
+    <a href="#sdp">SDP map</a>
+    <a href="#anti">Anti-pattern</a>
+    <a href="#lineage">Lineage</a>
+  </nav>
+
+  <main>
+    <section id="hub">
+      <h2>1. Big picture — hub and spoke</h2>
+      <pre class="mermaid">
+flowchart TB
+  subgraph Actors["People"]
+    U[Stakeholder / Product]
+    HA[Human approver — RE]
+    HB[Human approver — Architecture]
+  end
+
+  subgraph Hub["Orchestration layer"]
+    O[Orchestrator<br/>runs · gates · audit]
+    S[(Artifact store<br/>SDP versions)]
+  end
+
+  subgraph Workers["Specialist systems"]
+    RE[RE tools]
+    TA[TimeArch]
+    CD[Coding tools]
+  end
+
+  U -->|intent / change request| O
+  O <-->|start job / callback| RE
+  O <-->|start job / callback| TA
+  O <-->|start job / callback| CD
+  O --> S
+  RE -.->|Requirements Package| S
+  TA -.->|SDP / Change Package| S
+  CD -.->|PR + verification| S
+  HA -.->|approve RE package| O
+  HB -.->|approve SDP| O
+      </pre>
+    </section>
+
+    <section id="sequence">
+      <h2>2. End-to-end sequence (happy path)</h2>
+      <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor User as Stakeholder
+  participant Orch as Orchestrator
+  participant RE as RE tools
+  participant TA as TimeArch
+  participant Code as Coding tools
+  participant Git as Git repo / CI
+
+  User->>Orch: Submit intent
+  Orch->>Orch: Create Run
+  Orch->>RE: Start requirements job
+  RE-->>Orch: Requirements Package
+  Note over Orch,RE: Gate 1 — approve RE
+  Orch->>TA: Import requirements
+  TA->>TA: Architecture / Change analysis
+  TA-->>Orch: Export SDP
+  Note over Orch,TA: Gate 2 — approve architecture
+  Orch->>Code: Start implementation
+  Code->>Git: Open PR + tests
+  Git-->>Code: CI results
+  Code-->>Orch: PR URL + verification
+  Orch-->>User: Done / loop on gaps
+      </pre>
+    </section>
+
+    <section id="states">
+      <h2>3. Run state machine</h2>
+      <pre class="mermaid">
+stateDiagram-v2
+  [*] --> Created
+  Created --> RE_Running: dispatch RE
+  RE_Running --> RE_PendingApproval: package ready
+  RE_PendingApproval --> Arch_Running: approved
+  RE_PendingApproval --> Failed: rejected
+  Arch_Running --> Arch_PendingApproval: SDP ready
+  Arch_PendingApproval --> Coding_Running: approved
+  Arch_PendingApproval --> Failed: rejected
+  Coding_Running --> Verifying: PR opened
+  Verifying --> Completed: CI green
+  Verifying --> Coding_Running: fix loop
+  Verifying --> Failed: blocked
+  Failed --> [*]
+  Completed --> [*]
+      </pre>
+    </section>
+
+    <section id="packages">
+      <h2>4. What moves between stages</h2>
+      <pre class="mermaid">
+flowchart LR
+  subgraph In["Into TimeArch"]
+    RP[Requirements Package]
+    BF[Optional brownfield sources]
+  end
+  subgraph TA["TimeArch"]
+    A[Architecture and ADRs]
+    C[Change Package]
+    W[Work items]
+  end
+  subgraph Out["SDP"]
+    SDP[Software Delivery Package]
+  end
+  subgraph CodeOut["Coding output"]
+    PR[Git PR]
+    V[verification.json]
+  end
+  RP --> TA
+  BF --> TA
+  A --> SDP
+  C --> SDP
+  W --> SDP
+  SDP --> PR
+  SDP --> V
+      </pre>
+    </section>
+
+    <section id="sdp">
+      <h2>5. SDP contents</h2>
+      <pre class="mermaid">
+flowchart TB
+  SDP[SDP ZIP / folder]
+  SDP --> M[package.json]
+  SDP --> R[requirements.yaml]
+  SDP --> AR[architecture.yaml]
+  SDP --> CP[change_package.md]
+  SDP --> CB[coding_brief.md]
+  SDP --> WI[work_items.json]
+  SDP --> ADR[adr/]
+  SDP --> BF[brownfield/ optional]
+  SDP --> TR[traces/ optional]
+      </pre>
+    </section>
+
+    <section id="anti">
+      <h2>6. Anti-pattern vs recommended</h2>
+      <pre class="mermaid">
+flowchart TB
+  subgraph Bad["Avoid — pairwise spaghetti"]
+    RE1[RE] <--> TA1[TimeArch]
+    TA1 <--> CD1[Coding]
+    RE1 <--> CD1
+  end
+  subgraph Good["Prefer — hub and spoke"]
+    O2[Orchestrator]
+    RE2[RE] --- O2
+    TA2[TimeArch] --- O2
+    CD2[Coding] --- O2
+  end
+      </pre>
+    </section>
+
+    <section id="lineage">
+      <h2>7. Lineage — requirement → code</h2>
+      <pre class="mermaid">
+flowchart LR
+  REQ[REQ-12] --> DEC[ADR / decision]
+  DEC --> WI[wi_001 work item]
+  WI --> FILE[source files]
+  FILE --> PR[Pull request]
+  PR --> RUN[Run audit log]
+      </pre>
+    </section>
+  </main>
+
+  <footer>
+    Source markdown also lives in the repo:
+    <a href="https://github.com/ResearchAnonymized/TimeArch/tree/main/docs/wiki">docs/wiki</a>
+  </footer>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "dark",
+      securityLevel: "loose",
+      flowchart: { curve: "basis" },
+    });
+  </script>
+</body>
+</html>
