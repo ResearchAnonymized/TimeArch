@@ -1,6 +1,11 @@
 # Diagrams — Software Factory
 
-Visual overview for partner meetings. All diagrams use [Mermaid](https://mermaid.js.org/) (renders on GitHub, GitLab, many Markdown previews, and Notion with a Mermaid block).
+Visual overview for partner meetings.
+
+**Prefer the interactive page (diagrams always render):**  
+[Open live diagrams →](./diagrams.html)
+
+Markdown below uses [Mermaid](https://mermaid.js.org/). On this GitHub Pages site, Mermaid is loaded in the browser so the charts draw automatically (hard-refresh if you still see code).
 
 ---
 

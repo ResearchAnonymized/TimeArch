@@ -13,7 +13,8 @@ Multi-team software factory planning: **Requirements Engineering → TimeArch �
 | Page | Description |
 |------|-------------|
 | [Software Factory Integration](./wiki/Software-Factory-Integration.html) | Full integration plan |
-| [**Diagrams (interactive)**](./wiki/diagrams.html) | Mermaid architecture diagrams |
+| [**Diagrams (interactive)**](./wiki/diagrams.html) | Mermaid charts — use this for the meeting |
+| [Diagrams (markdown)](./wiki/Diagrams.html) | Same content as markdown page |
 | [Software Delivery Package (SDP)](./wiki/Software-Delivery-Package.html) | Handoff artifact format |
 | [Team Decisions Log](./wiki/Team-Decisions-Log.html) | Meeting decisions |
 | [Wiki markdown home](./wiki/Home.html) | Index of all wiki pages |

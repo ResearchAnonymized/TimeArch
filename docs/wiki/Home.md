@@ -2,6 +2,8 @@
 
 **Live site (GitHub Pages):** https://researchanonymized.github.io/TimeArch/
 
+**Diagrams (rendered):** https://researchanonymized.github.io/TimeArch/wiki/diagrams.html
+
 
 Internal planning and integration wiki for the TimeArch team and partner teams (Requirements Engineering, Coding, Orchestration).
 

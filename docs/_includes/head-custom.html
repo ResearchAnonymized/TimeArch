@@ -1,0 +1,61 @@
+<!-- Cayman theme hook: loads Mermaid so ```mermaid fences render on GitHub Pages. -->
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: "neutral",
+    securityLevel: "loose",
+    flowchart: { curve: "basis" },
+  });
+
+  function collectMermaidBlocks() {
+    const blocks = [];
+    // Rouge / kramdown: <div class="language-mermaid..."><pre><code>
+    document.querySelectorAll('div[class*="language-mermaid"] pre code, pre code.language-mermaid').forEach((el) => {
+      blocks.push(el);
+    });
+    // Fallback: fenced block whose text starts with a mermaid diagram keyword
+    document.querySelectorAll("pre code").forEach((el) => {
+      const t = (el.textContent || "").trim();
+      if (/^(flowchart|sequenceDiagram|stateDiagram|classDiagram|erDiagram|gantt|pie|journey|gitGraph|mindmap|timeline)\b/.test(t)) {
+        blocks.push(el);
+      }
+    });
+    return [...new Set(blocks)];
+  }
+
+  async function renderAll() {
+    const codes = collectMermaidBlocks();
+    for (const code of codes) {
+      const graph = code.textContent || "";
+      const pre = code.closest("pre") || code.parentElement;
+      const wrap = pre?.closest('div[class*="language-mermaid"]') || pre?.parentElement || pre;
+      if (!wrap || !graph.trim()) continue;
+
+      const host = document.createElement("div");
+      host.className = "mermaid";
+      host.textContent = graph;
+      wrap.replaceWith(host);
+    }
+    await mermaid.run({ querySelector: ".mermaid" });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      void renderAll();
+    });
+  } else {
+    void renderAll();
+  }
+</script>
+<style>
+  .mermaid {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+</style>
