@@ -34,9 +34,11 @@ lifecycle in the workspace.
 
 ## Wiki (multi-team factory)
 
-Partner planning docs for RE → TimeArch → Coding via orchestration:
+Planning docs and user guides — also published at https://researchanonymized.github.io/TimeArch/
 
 - [Wiki home](docs/wiki/Home.md)
+- [Getting started](docs/wiki/Getting-Started.md)
+- [Brownfield discovery](docs/wiki/Brownfield-Discovery.md)
 - [Software Factory Integration](docs/wiki/Software-Factory-Integration.md)
 - [Diagrams](docs/wiki/Diagrams.md)
 - [Software Delivery Package (SDP)](docs/wiki/Software-Delivery-Package.md)

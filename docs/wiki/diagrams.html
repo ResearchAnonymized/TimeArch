@@ -88,6 +88,7 @@
     <a href="#states">Run states</a>
     <a href="#packages">Packages</a>
     <a href="#sdp">SDP map</a>
+    <a href="#brownfield">Brownfield</a>
     <a href="#anti">Anti-pattern</a>
     <a href="#lineage">Lineage</a>
   </nav>
@@ -221,6 +222,29 @@ flowchart TB
   SDP --> ADR[adr/]
   SDP --> BF[brownfield/ optional]
   SDP --> TR[traces/ optional]
+      </pre>
+    </section>
+
+    <section id="brownfield">
+      <h2>8. Brownfield discovery flow</h2>
+      <pre class="mermaid">
+flowchart TB
+  subgraph Milestones["Dashboard milestones"]
+    M1[1 Import]
+    M2[2 Recover]
+    M3[3 Change]
+    M4[4 Released]
+    M5[5 Closed]
+    M1 --> M2 --> M3 --> M4 --> M5
+  end
+  subgraph ChangeSteps["Inside Change"]
+    C1[See changes]
+    C2[Review decisions]
+    C3[Build guide]
+    C4[Change package]
+    C1 --> C2 --> C3 --> C4
+  end
+  M3 -.-> ChangeSteps
       </pre>
     </section>
 

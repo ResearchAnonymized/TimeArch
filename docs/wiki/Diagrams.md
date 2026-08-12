@@ -201,17 +201,47 @@ flowchart LR
 
 ---
 
-## How to present tomorrow
+## 8. Brownfield discovery flow
 
-1. Start with **§1 Big picture** (hub).  
+TimeArch brownfield cases use five milestones (not the greenfield 18 stages).
+
+```mermaid
+flowchart TB
+  subgraph Milestones["Dashboard milestones (5)"]
+    M1[1 Import<br/>code · GitHub · docs]
+    M2[2 Recover<br/>reverse-engineer as-is]
+    M3[3 Change<br/>propose · decide · package]
+    M4[4 Released<br/>gates approved]
+    M5[5 Closed<br/>case locked]
+    M1 --> M2 --> M3 --> M4 --> M5
+  end
+
+  subgraph ChangeSteps["Inside Change (per revision)"]
+    C1[See changes]
+    C2[Review decisions<br/>Go / No-go / Drop]
+    C3[Build guide<br/>AC + tests]
+    C4[Change package<br/>SCP · SIP · agent_pack.json]
+    C1 --> C2 --> C3 --> C4
+  end
+
+  M3 -.-> ChangeSteps
+```
+
+---
+
+## How to present
+
+1. Start with **§1 Big picture** (hub) for partner integration.  
 2. Walk **§2 Sequence** step by step.  
-3. Show **§5 SDP** as “the only handoff”.  
-4. End with **§6** — why not direct tool-to-tool links.
+3. Show **§8 Brownfield** if the audience works with existing codebases.  
+4. Show **§5 SDP** as “the only handoff”.  
+5. End with **§6** — why not direct tool-to-tool links.
 
 ---
 
 ## See also
 
+- [Brownfield Discovery](./Brownfield-Discovery.md)  
 - [Software Factory Integration](./Software-Factory-Integration.md)  
 - [Software Delivery Package (SDP)](./Software-Delivery-Package.md)  
 - [Home](./Home.md)

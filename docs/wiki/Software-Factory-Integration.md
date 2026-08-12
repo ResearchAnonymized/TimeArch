@@ -108,20 +108,37 @@ See [Software Delivery Package (SDP)](./Software-Delivery-Package.md) for the ex
 
 ---
 
-## 5. How TimeArch fits (today → tomorrow)
+## 5. How TimeArch fits (implemented → next)
+
+### Implemented in the app (August 2026)
+
+| Capability | Where in TimeArch | Orchestrator-facing output |
+|------------|-------------------|----------------------------|
+| Brownfield import | Discovery → Import (GitHub, ZIP, demo) | `project_imports` + stored files |
+| As-is recovery | Discovery → Recover | Inventory, Mermaid as-is, narrative |
+| Change analysis | Discovery → Change → Re-analyze | Mappings, impact, ADRs, AC, tests |
+| Human gates | Review decisions + Build guide + Release | Go / No-go / Drop verdicts |
+| Change package | Change package tab | SCP + SIP (PDF/DOCX) + on-screen pages |
+| Agent handoff | Machine record tab | `agent_pack.json` (`kind: "agent_pack"`, v4) |
+| External access | Settings → Integrations | REST API, MCP, CLI (see [INTEGRATIONS.md](../INTEGRATIONS.md)) |
+| Case lifecycle | Dashboard milestones + Close case | 5-step brownfield progress, locked project |
+
+See [Brownfield Discovery](./Brownfield-Discovery.md) for the user workflow.
+
+### Still proposed for Orchestrator ZIP export
 
 | Today in TimeArch | Expose to Orchestrator as |
 |-------------------|---------------------------|
 | Project + requirements | `requirements.yaml` |
 | Architecture artifacts / ADRs | `architecture.yaml` + `adr/*.md` |
 | Feature changes + work items | `work_items.json` |
-| Change Package (Markdown) | `change_package.md` + `coding_brief.md` |
+| Change package exports | `change_proposal.pdf`, `build_plan.pdf`, `agent_pack.json` |
 | Agent runs / traces | `traces/` (optional) |
 
 **Near-term TimeArch APIs (proposed):**
 
 - `POST /runs/import-requirements` — ingest RE package into a project  
-- `POST /runs/export-sdp` — emit SDP from project / feature change  
+- `POST /runs/export-sdp` — emit full SDP ZIP from project / feature change  
 
 TimeArch stays the **architecture brain**, not the bus.
 
@@ -133,7 +150,7 @@ TimeArch stays the **architecture brain**, not the bus.
 |-------|--------|----------------|
 | **P0 · Contracts** | Agree SDP schema v0.1 + run state machine | All three teams sign the schema |
 | **P1 · Greenfield happy path** | RE → Orch → TimeArch → Orch → Coding on one demo app | PR from SDP with ≥1 passing test suite |
-| **P2 · Brownfield path** | Import existing system into TimeArch; Change Package → Coding | PR references blast radius + work items |
+| **P2 · Brownfield path** | Import existing system into TimeArch; Change Package → Coding | **In progress** — UI + `agent_pack.json` shipped; Orchestrator ZIP export pending |
 | **P3 · Hardening** | Approvals, retries, SSO, audit UI | Failed run can be replayed without data loss |
 
 ---
