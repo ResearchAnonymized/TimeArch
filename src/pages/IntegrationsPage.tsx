@@ -181,7 +181,7 @@ export default function IntegrationsPage() {
         <h1 className="text-3xl font-bold">Integrations</h1>
         <p className="text-muted-foreground">
           API tokens, MCP access, and webhooks for external tools. See{" "}
-          <a href="/docs/INTEGRATIONS.md" className="underline">the integration guide</a>{" "}
+          <span className="underline">docs/INTEGRATIONS.md</span>{" "}
           for endpoint references.
         </p>
       </header>
@@ -284,7 +284,7 @@ node sdk/cli.mjs disposition <projectId>`}</pre>
               </section>
 
               <p className="text-xs text-muted-foreground">
-                Full reference: <a href="/docs/INTEGRATIONS.md" className="underline">docs/INTEGRATIONS.md</a>
+                Full reference: <code className="text-xs">docs/INTEGRATIONS.md</code> in the repository
               </p>
             </CardContent>
           </Card>

@@ -250,8 +250,8 @@ export default function DriftDetectionPanel({ projectId }: Props) {
     <div className="rounded-xl border bg-card p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-            <RefreshCw className="h-4 w-4 text-amber-600" />
+          <div className="h-9 w-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+            <RefreshCw className="h-4 w-4 text-blue-600" />
           </div>
           <div>
             <h3 className="font-display text-sm font-bold">Drift Detection</h3>

@@ -4,11 +4,11 @@
 # Default: LLM_MODE=replay (no network, no API key).
 #
 # Auto-bootstrap: if the cassette is missing/empty OR the baseline directory
-# is empty, this script can run ONCE in record mode against the live LLM API to populate both, then promote the run as the new baseline.
+# is empty, this script can run ONCE in record mode against the live Lovable
 # AI Gateway to populate both, then promote the run as the new baseline.
 #
 # Bootstrap is triggered when EITHER:
-#   • LLM_API_KEY is set AND cassette is empty / baseline is empty, OR
+#   • LOVABLE_API_KEY is set AND cassette is empty / baseline is empty, OR
 #   • --bootstrap is passed explicitly
 #
 # Pass --no-bootstrap to disable. Pass --force-bootstrap to refresh even if
@@ -19,11 +19,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 BOOTSTRAP_FLAG="auto"   # auto | force | off
+RUN_EXPERIMENT="no"
+EXPERIMENT_PROJECT="${TIMEARCH_EXPERIMENT_PROJECT:-}"
+EXPERIMENT_REPEAT="${TIMEARCH_EXPERIMENT_REPEAT:-3}"
 for arg in "$@"; do
   case "$arg" in
     --bootstrap)        BOOTSTRAP_FLAG="force" ;;
     --force-bootstrap)  BOOTSTRAP_FLAG="force" ;;
     --no-bootstrap)     BOOTSTRAP_FLAG="off" ;;
+    --experiment)       RUN_EXPERIMENT="yes" ;;
+    --experiment=*)     RUN_EXPERIMENT="yes"; EXPERIMENT_PROJECT="${arg#*=}" ;;
     *) echo "unknown arg: $arg" >&2; exit 2 ;;
   esac
 done
@@ -57,15 +62,15 @@ ENTRIES="$(cassette_entries)"
 if [ "$BOOTSTRAP_FLAG" = "force" ]; then
   NEED_BOOTSTRAP="yes"
 elif [ "$BOOTSTRAP_FLAG" = "auto" ]; then
-  if { [ "$ENTRIES" -eq 0 ] || baseline_empty; } && [ -n "${LLM_API_KEY:-}" ]; then
+  if { [ "$ENTRIES" -eq 0 ] || baseline_empty; } && [ -n "${LOVABLE_API_KEY:-}" ]; then
     NEED_BOOTSTRAP="yes"
   fi
 fi
 
 if [ "$NEED_BOOTSTRAP" = "yes" ]; then
-  if [ -z "${LLM_API_KEY:-}" ]; then
-    echo "[reproduce] !! bootstrap requested but LLM_API_KEY is not set."
-    echo "[reproduce]    Set it (live configured LLM API key) and re-run, or use --no-bootstrap."
+  if [ -z "${LOVABLE_API_KEY:-}" ]; then
+    echo "[reproduce] !! bootstrap requested but LOVABLE_API_KEY is not set."
+    echo "[reproduce]    Set it (live Lovable AI Gateway key) and re-run, or use --no-bootstrap."
     exit 3
   fi
   echo "[reproduce] ── BOOTSTRAP MODE ────────────────────────────────────────"
@@ -129,7 +134,7 @@ fi
 # ─── 4b. Normal mode: diff against locked baseline ─────────────────────────
 echo "[reproduce] 4/4  Diff against locked baseline"
 if baseline_empty; then
-  echo "  (no baseline yet — run once with LLM_API_KEY set, or pass --bootstrap)"
+  echo "  (no baseline yet — run once with LOVABLE_API_KEY set, or pass --bootstrap)"
 else
   if diff -q "$BASE/brownfield-summary.json" "$OUT/brownfield-summary.json" >/dev/null; then
     echo "  ✓ brownfield-summary.json matches baseline"
@@ -137,6 +142,34 @@ else
     echo "  ! brownfield-summary.json differs — see diff:"
     diff "$BASE/brownfield-summary.json" "$OUT/brownfield-summary.json" || true
   fi
-fi
-
 echo "[reproduce] DONE — outputs in $OUT/"
+
+# ─── 5. Optional: Experiment Ground batch (prospective loop) ───────────────
+if [ "$RUN_EXPERIMENT" = "yes" ]; then
+  echo "[reproduce] 5/5  Experiment Ground batch (× $EXPERIMENT_REPEAT)"
+  if [ -z "${TIMEARCH_JWT:-}" ]; then
+    echo "  ! TIMEARCH_JWT (Supabase user JWT) is required for --experiment" >&2
+    exit 4
+  fi
+  if [ -z "$EXPERIMENT_PROJECT" ]; then
+    echo "  ! project id required — pass --experiment=<projectId> or set TIMEARCH_EXPERIMENT_PROJECT" >&2
+    exit 4
+  fi
+  # Discover proposals via PostgREST, then dispatch a batch via the CLI.
+  REST_BASE="${TIMEARCH_REST_BASE_URL:-https://yyqbxzcjnpsijkjbfjcg.supabase.co/rest/v1}"
+  ANON_KEY_HDR="${TIMEARCH_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cWJ4emNqbnBzaWpramJmamNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODYyNTUsImV4cCI6MjA4OTM2MjI1NX0.zrNpGEXkg-R59Mwkp9Koz8y8QD0eoWjbuoHA9i1XpJg}"
+  IDS="$(curl -sS "$REST_BASE/experiment_proposals?project_id=eq.$EXPERIMENT_PROJECT&select=id" \
+      -H "Authorization: Bearer $TIMEARCH_JWT" -H "apikey: $ANON_KEY_HDR" \
+      | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).map(r=>r.id).join(",")))')"
+  if [ -z "$IDS" ]; then
+    echo "  ! no proposals for project $EXPERIMENT_PROJECT — load the seed corpus first" >&2
+    exit 4
+  fi
+  TIMEARCH_TOKEN="${TIMEARCH_TOKEN:-unused}" node "$ROOT/sdk/cli.mjs" experiment batch "$EXPERIMENT_PROJECT" "$IDS" "$EXPERIMENT_REPEAT" \
+      | tee "$OUT/experiment-batch.log"
+  # Snapshot runs for the record.
+  curl -sS "$REST_BASE/experiment_runs?project_id=eq.$EXPERIMENT_PROJECT&order=started_at.desc&limit=100" \
+      -H "Authorization: Bearer $TIMEARCH_JWT" -H "apikey: $ANON_KEY_HDR" \
+      > "$OUT/experiment-runs.json"
+  echo "  ✓ experiment runs snapshot → $OUT/experiment-runs.json"
+fi

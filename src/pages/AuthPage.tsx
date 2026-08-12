@@ -120,9 +120,23 @@ export default function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin },
+        options: {
+          // Must match supabase/config.toml site_url / additional_redirect_urls
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "select_account",
+          },
+        },
       });
-      if (error) throw error;
+      if (error) {
+        const msg = error.message || "";
+        toast.error(
+          /provider is not enabled|Unsupported provider/i.test(msg)
+            ? "Google sign-in is not enabled yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, then restart local Supabase."
+            : msg || "Google sign-in failed",
+        );
+      }
     } catch {
       toast.error("Google sign-in failed");
     }

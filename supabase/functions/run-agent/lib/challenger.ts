@@ -17,9 +17,9 @@ export async function runChallengeOnly(args: {
   project_id: string;
   stage: number;
   user_id: string;
-  LLM_API_KEY: string;
+  LOVABLE_API_KEY: string;
 }) {
-  const { supabase, project_id, stage, user_id, LLM_API_KEY } = args;
+  const { supabase, project_id, stage, user_id, LOVABLE_API_KEY } = args;
   const startTime = Date.now();
 
   // 1. Find latest primary artifact for this stage (skip prior challenger reviews)
@@ -206,7 +206,7 @@ ${JSON.stringify(drvTrimmed, null, 2)}
 ${upstreamBlock}
 ${closingInstruction}${isValidation ? " For Architecture Validation, also flag any inconsistency between the validation report and the upstream locked decisions (e.g., risks not addressed in the validation plan, missing quality-attribute coverage, scenario gaps for the chosen style)." : ""}`;
 
-      const llm = createLangChainLLM(LLM_API_KEY);
+      const llm = createLangChainLLM(LOVABLE_API_KEY);
       const stageChallengerDefault =
         getStageHandler(stage)?.challengerSystemPrompt ?? SCIENTIFIC_CHALLENGER_SYSTEM_PROMPT;
       const challengerKey =

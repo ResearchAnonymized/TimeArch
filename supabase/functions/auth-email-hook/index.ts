@@ -1,6 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { parseEmailWebhookPayload, WebhookError, verifyEmailWebhookRequest, getEmailApiKey } from '../_shared/email-platform.ts'
+import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
+import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { InviteEmail } from '../_shared/email-templates/invite.tsx'
@@ -12,7 +13,7 @@ import { ReauthenticationEmail } from '../_shared/email-templates/reauthenticati
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-webhook-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+    'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
@@ -45,7 +46,7 @@ const FROM_DOMAIN = "notify.sda-assistant.com" // Domain shown in From address (
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = Deno.env.get("SITE_URL") ?? "https://example.com"
+const SAMPLE_PROJECT_URL = "https://timearch.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
@@ -89,7 +90,7 @@ async function handlePreview(req: Request): Promise<Response> {
     return new Response(null, { headers: previewCorsHeaders })
   }
 
-  const apiKey = getEmailApiKey()
+  const apiKey = Deno.env.get('LOVABLE_API_KEY')
   const authHeader = req.headers.get('Authorization')
 
   if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
@@ -130,11 +131,10 @@ async function handlePreview(req: Request): Promise<Response> {
 
 // Webhook handler - verifies signature and sends email
 async function handleWebhook(req: Request): Promise<Response> {
-  let apiKey: string
-  try {
-    apiKey = getEmailApiKey()
-  } catch {
-    console.error('EMAIL_API_KEY not configured')
+  const apiKey = Deno.env.get('LOVABLE_API_KEY')
+
+  if (!apiKey) {
+    console.error('LOVABLE_API_KEY not configured')
     return new Response(
       JSON.stringify({ error: 'Server configuration error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -145,7 +145,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   let payload: any
   let run_id = ''
   try {
-    const verified = await verifyEmailWebhookRequest({
+    const verified = await verifyWebhookRequest({
       req,
       secret: apiKey,
       parser: parseEmailWebhookPayload,

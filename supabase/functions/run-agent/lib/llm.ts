@@ -1,7 +1,6 @@
 // LangChain LLM factory + structured-output recovery helpers.
 import { ChatOpenAI } from "npm:@langchain/openai@0.5.10";
 import { HumanMessage, SystemMessage } from "npm:@langchain/core@0.3.56/messages";
-import { getLlmApiBaseUrl } from "../../_shared/llm-config.ts";
 
 // ─── LangChain Agent Factory ────────────────────────────────────────────────
 export function createLangChainLLM(apiKey: string, model: string = "google/gemini-2.5-flash", maxTokens?: number) {
@@ -9,7 +8,7 @@ export function createLangChainLLM(apiKey: string, model: string = "google/gemin
     modelName: model,
     openAIApiKey: apiKey,
     configuration: {
-      baseURL: `${getLlmApiBaseUrl()}/v1`,
+      baseURL: "https://ai.gateway.lovable.dev/v1",
     },
     temperature: 0,
     maxRetries: 2,

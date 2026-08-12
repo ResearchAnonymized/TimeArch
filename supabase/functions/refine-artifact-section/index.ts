@@ -1,5 +1,4 @@
 // Surgical refinement: ask the AI to patch only the section of an artifact
-import { getLlmApiKey, getLlmChatCompletionsUrl } from "../_shared/llm-config.ts";
 // that addresses a specific checklist item, given a list of identified gaps.
 // The patch is merged into the existing artifact content (no destructive overwrite).
 
@@ -11,7 +10,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LLM_API_KEY = Deno.env.get("LLM_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -150,10 +149,10 @@ ${artifactText}
 
 Produce the JSON { "patch": ..., "summary": ... } object now.`;
 
-    const aiRes = await fetch(getLlmChatCompletionsUrl(), {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LLM_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

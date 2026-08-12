@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, LogOut, Shield, FileText } from "lucide-react";
+import { Zap, LogOut, Shield, FileText, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
+import UiModeSwitcher from "@/components/UiModeSwitcher";
 
 interface DashboardHeaderProps {
   displayName: string | null | undefined;
@@ -33,6 +34,7 @@ export default function DashboardHeader({
           <span className="font-display text-lg font-bold tracking-tight">TimeArch</span>
         </div>
         <div className="flex items-center gap-3">
+          <UiModeSwitcher />
           <Button
             variant="ghost"
             size="icon"
@@ -43,15 +45,27 @@ export default function DashboardHeader({
             <FileText className="h-4 w-4" />
           </Button>
           {isAdmin && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={() => navigate("/admin")}
-              title="Admin Console"
-            >
-              <Shield className="h-4 w-4" />
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 text-amber-700 hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200"
+                onClick={() => navigate("/experiments")}
+                title="Experiment Ground (empirical validation)"
+              >
+                <FlaskConical className="h-4 w-4" />
+                <span className="hidden md:inline text-xs font-medium">Experiments</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => navigate("/admin")}
+                title="Admin Console"
+              >
+                <Shield className="h-4 w-4" />
+              </Button>
+            </>
           )}
           <span className="text-sm text-muted-foreground hidden sm:inline">
             {displayName || email}

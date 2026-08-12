@@ -1,0 +1,1 @@
+ALTER TABLE public.requirements ADD COLUMN IF NOT EXISTS urgency text CHECK (urgency IN ('immediate','soon','later','future'));

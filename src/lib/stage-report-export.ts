@@ -65,10 +65,26 @@ interface StageData {
   approval: any | null;
   requirements: any[];
   drivers: any[];
+  qualityScores: any[];
+  modernizationItems: any[];
+  systemStyle: any | null;
+  imports: any[];
+  provenanceLinks: { artifactTitle: string; importLabels: string[] }[];
 }
 
 async function fetchStageData(projectId: string, stage: number): Promise<StageData> {
-  const [artifactsRes, runsRes, approvalsRes, reqsRes, driversRes] = await Promise.all([
+  const [
+    artifactsRes,
+    runsRes,
+    approvalsRes,
+    reqsRes,
+    driversRes,
+    qsRes,
+    miRes,
+    ssRes,
+    impRes,
+    allArtRes,
+  ] = await Promise.all([
     supabase
       .from("architecture_artifacts")
       .select("*")
@@ -95,7 +111,36 @@ async function fetchStageData(projectId: string, stage: number): Promise<StageDa
       .select("*")
       .eq("project_id", projectId)
       .order("created_at"),
+    supabase.from("quality_scores").select("*").eq("project_id", projectId),
+    supabase
+      .from("modernization_items")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("roi", { ascending: false }),
+    supabase.from("system_style").select("*").eq("project_id", projectId).maybeSingle(),
+    supabase
+      .from("project_imports")
+      .select("id,source_label,kind,status")
+      .eq("project_id", projectId),
+    supabase
+      .from("architecture_artifacts")
+      .select("title,content")
+      .eq("project_id", projectId)
+      .eq("stage", stage),
   ]);
+
+  const impMap = new Map<string, string>();
+  (impRes.data || []).forEach((i: any) => impMap.set(i.id, i.source_label));
+  const provenanceLinks: { artifactTitle: string; importLabels: string[] }[] = [];
+  (allArtRes.data || []).forEach((a: any) => {
+    const ids = (a.content as any)?._meta?.source_import_ids as string[] | undefined;
+    if (ids && ids.length) {
+      provenanceLinks.push({
+        artifactTitle: a.title,
+        importLabels: ids.map((id) => impMap.get(id) || id).filter(Boolean),
+      });
+    }
+  });
 
   return {
     artifacts: artifactsRes.data || [],
@@ -103,6 +148,11 @@ async function fetchStageData(projectId: string, stage: number): Promise<StageDa
     approval: approvalsRes.data?.[0] || null,
     requirements: reqsRes.data || [],
     drivers: driversRes.data || [],
+    qualityScores: qsRes.data || [],
+    modernizationItems: miRes.data || [],
+    systemStyle: ssRes.data || null,
+    imports: impRes.data || [],
+    provenanceLinks,
   };
 }
 
@@ -171,7 +221,50 @@ export async function exportStageAsMarkdown(projectId: string, projectName: stri
     md += `\n`;
   }
 
-  // Artifacts
+  // Brownfield: architectural style verdict (Stage 5)
+  if (stage === 5 && data.systemStyle) {
+    const s = data.systemStyle;
+    md += `## Architectural Style Verdict\n\n`;
+    md += `- **Primary:** ${s.primary_style || "—"} (confidence ${((s.confidence ?? 0) * 100).toFixed(0)}%)\n`;
+    if (s.secondary_style) md += `- **Secondary:** ${s.secondary_style}\n`;
+    if (Array.isArray(s.evidence) && s.evidence.length)
+      md += `- **Evidence:** ${s.evidence.join("; ")}\n`;
+    if (Array.isArray(s.driver_fit) && s.driver_fit.length)
+      md += `- **Driver fit:** ${s.driver_fit.map((d: any) => `${d.driver || d.label} → ${d.fit || d.verdict || "?"}`).join(", ")}\n`;
+    md += `\n`;
+  }
+
+  // Brownfield: ISO 25010 scorecard (Stage 11)
+  if (stage === 11 && data.qualityScores.length > 0) {
+    md += `## ISO 25010 Quality Scorecard\n\n`;
+    md += `| Characteristic | As-Is | Target | Gap | Rationale |\n`;
+    md += `|---|---|---|---|---|\n`;
+    for (const q of data.qualityScores) {
+      md += `| ${q.characteristic} | ${q.as_is_score ?? "—"} | ${q.target_score ?? "—"} | ${q.gap ?? "—"} | ${(q.rationale || "").replace(/\|/g, "\\|")} |\n`;
+    }
+    md += `\n`;
+  }
+
+  // Brownfield: 7R Modernization roadmap (Stage 16)
+  if (stage === 16 && data.modernizationItems.length > 0) {
+    md += `## 7R Modernization Roadmap\n\n`;
+    md += `| Component | Action | Effort | Impact | ROI | Rationale |\n`;
+    md += `|---|---|---|---|---|---|\n`;
+    for (const m of data.modernizationItems) {
+      md += `| ${m.component || "—"} | ${m.action} | ${m.effort} | ${m.impact} | ${m.roi ?? "—"} | ${(m.rationale || "").replace(/\|/g, "\\|")} |\n`;
+    }
+    md += `\n`;
+  }
+
+  // Brownfield: evidence-graph snapshot
+  if (data.provenanceLinks.length > 0) {
+    md += `## Evidence Graph (this stage)\n\n`;
+    for (const p of data.provenanceLinks) {
+      md += `- **${p.artifactTitle}** ← ${p.importLabels.join(", ")}\n`;
+    }
+    md += `\n`;
+  }
+
   if (data.artifacts.length > 0) {
     md += `## Artifacts\n\n`;
     for (const artifact of data.artifacts) {
@@ -348,6 +441,82 @@ export async function exportStageAsPDF(projectId: string, projectName: string, s
       alternateRowStyles: { fillColor: COLORS.light },
     });
     y = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // ── Brownfield: Style verdict (stage 5) ──
+  if (stage === 5 && data.systemStyle) {
+    const s = data.systemStyle;
+    checkPage(30);
+    addText("Architectural Style Verdict", 14, COLORS.dark, true);
+    y += 4;
+    addText(
+      `Primary: ${s.primary_style || "—"}  (confidence ${((s.confidence ?? 0) * 100).toFixed(0)}%)`,
+      9,
+      COLORS.dark,
+      true,
+    );
+    if (s.secondary_style) addText(`Secondary: ${s.secondary_style}`, 8, COLORS.muted);
+    if (Array.isArray(s.evidence) && s.evidence.length)
+      addText(`Evidence: ${s.evidence.join("; ")}`, 8, COLORS.muted);
+    y += 6;
+  }
+
+  // ── Brownfield: ISO 25010 scorecard (stage 11) ──
+  if (stage === 11 && data.qualityScores.length > 0) {
+    checkPage(14);
+    addText("ISO 25010 Quality Scorecard", 14, COLORS.dark, true);
+    y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [["Characteristic", "As-Is", "Target", "Gap", "Rationale"]],
+      body: data.qualityScores.map((q: any) => [
+        q.characteristic,
+        q.as_is_score ?? "—",
+        q.target_score ?? "—",
+        q.gap ?? "—",
+        q.rationale || "",
+      ]),
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7, cellPadding: 2.5, textColor: COLORS.dark },
+      headStyles: { fillColor: COLORS.primary, textColor: [255, 255, 255], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: COLORS.light },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // ── Brownfield: 7R Modernization roadmap (stage 16) ──
+  if (stage === 16 && data.modernizationItems.length > 0) {
+    checkPage(14);
+    addText("7R Modernization Roadmap", 14, COLORS.dark, true);
+    y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [["Component", "Action", "Effort", "Impact", "ROI", "Rationale"]],
+      body: data.modernizationItems.map((m: any) => [
+        m.component || "—",
+        m.action,
+        m.effort,
+        m.impact,
+        m.roi ?? "—",
+        m.rationale || "",
+      ]),
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7, cellPadding: 2.5, textColor: COLORS.dark },
+      headStyles: { fillColor: COLORS.primary, textColor: [255, 255, 255], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: COLORS.light },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // ── Brownfield: Evidence graph ──
+  if (data.provenanceLinks.length > 0) {
+    checkPage(14);
+    addText("Evidence Graph (this stage)", 14, COLORS.dark, true);
+    y += 4;
+    for (const p of data.provenanceLinks) {
+      addText(`• ${p.artifactTitle}  ←  ${p.importLabels.join(", ")}`, 8, COLORS.muted);
+    }
+    y += 6;
   }
 
   // ── Artifacts ──
@@ -652,6 +821,235 @@ export async function exportStageAsDOCX(projectId: string, projectName: string, 
         );
       }
     }
+  }
+
+  // ── Brownfield: Style verdict (stage 5) ──
+  if (stage === 5 && data.systemStyle) {
+    const s = data.systemStyle;
+    children.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [
+          new TextRun({
+            text: "Architectural Style Verdict",
+            bold: true,
+            size: 28,
+            font: "Arial",
+            color: DARK,
+          }),
+        ],
+        spacing: { before: 200, after: 160 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `Primary: ${s.primary_style || "—"} (confidence ${((s.confidence ?? 0) * 100).toFixed(0)}%)`,
+            bold: true,
+            size: 20,
+            font: "Arial",
+            color: BRAND,
+          }),
+        ],
+        spacing: { after: 80 },
+      }),
+    );
+    if (s.secondary_style)
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Secondary: ${s.secondary_style}`,
+              size: 18,
+              font: "Arial",
+              color: MUTED,
+            }),
+          ],
+          spacing: { after: 80 },
+        }),
+      );
+    if (Array.isArray(s.evidence) && s.evidence.length)
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Evidence: ${s.evidence.join("; ")}`,
+              size: 18,
+              font: "Arial",
+              color: MUTED,
+            }),
+          ],
+          spacing: { after: 200 },
+        }),
+      );
+  }
+
+  // ── Brownfield: ISO 25010 scorecard (stage 11) ──
+  if (stage === 11 && data.qualityScores.length > 0) {
+    children.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [
+          new TextRun({
+            text: "ISO 25010 Quality Scorecard",
+            bold: true,
+            size: 28,
+            font: "Arial",
+            color: DARK,
+          }),
+        ],
+        spacing: { before: 200, after: 160 },
+      }),
+    );
+    const headers = ["Characteristic", "As-Is", "Target", "Gap", "Rationale"].map(
+      (h) =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: h, bold: true, size: 16, font: "Arial", color: "FFFFFF" }),
+              ],
+            }),
+          ],
+          shading: { fill: BRAND, type: ShadingType.CLEAR },
+          borders: cellBorders,
+          margins: { top: 60, bottom: 60, left: 100, right: 100 },
+        }),
+    );
+    const rows = data.qualityScores.map(
+      (q: any) =>
+        new TableRow({
+          children: [
+            q.characteristic,
+            String(q.as_is_score ?? "—"),
+            String(q.target_score ?? "—"),
+            String(q.gap ?? "—"),
+            q.rationale || "",
+          ].map(
+            (v) =>
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: String(v), size: 16, font: "Arial", color: DARK }),
+                    ],
+                  }),
+                ],
+                borders: cellBorders,
+                margins: { top: 40, bottom: 40, left: 100, right: 100 },
+              }),
+          ),
+        }),
+    );
+    children.push(
+      new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        rows: [new TableRow({ children: headers }), ...rows],
+      }),
+      new Paragraph({ spacing: { after: 300 } }),
+    );
+  }
+
+  // ── Brownfield: 7R Modernization roadmap (stage 16) ──
+  if (stage === 16 && data.modernizationItems.length > 0) {
+    children.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [
+          new TextRun({
+            text: "7R Modernization Roadmap",
+            bold: true,
+            size: 28,
+            font: "Arial",
+            color: DARK,
+          }),
+        ],
+        spacing: { before: 200, after: 160 },
+      }),
+    );
+    const headers = ["Component", "Action", "Effort", "Impact", "ROI", "Rationale"].map(
+      (h) =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: h, bold: true, size: 16, font: "Arial", color: "FFFFFF" }),
+              ],
+            }),
+          ],
+          shading: { fill: BRAND, type: ShadingType.CLEAR },
+          borders: cellBorders,
+          margins: { top: 60, bottom: 60, left: 100, right: 100 },
+        }),
+    );
+    const rows = data.modernizationItems.map(
+      (m: any) =>
+        new TableRow({
+          children: [
+            m.component || "—",
+            m.action,
+            m.effort,
+            m.impact,
+            String(m.roi ?? "—"),
+            m.rationale || "",
+          ].map(
+            (v) =>
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: String(v), size: 16, font: "Arial", color: DARK }),
+                    ],
+                  }),
+                ],
+                borders: cellBorders,
+                margins: { top: 40, bottom: 40, left: 100, right: 100 },
+              }),
+          ),
+        }),
+    );
+    children.push(
+      new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        rows: [new TableRow({ children: headers }), ...rows],
+      }),
+      new Paragraph({ spacing: { after: 300 } }),
+    );
+  }
+
+  // ── Brownfield: Evidence graph ──
+  if (data.provenanceLinks.length > 0) {
+    children.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [
+          new TextRun({
+            text: "Evidence Graph (this stage)",
+            bold: true,
+            size: 28,
+            font: "Arial",
+            color: DARK,
+          }),
+        ],
+        spacing: { before: 200, after: 160 },
+      }),
+    );
+    for (const p of data.provenanceLinks) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `• ${p.artifactTitle}`, bold: true, size: 18, font: "Arial", color: DARK }),
+            new TextRun({
+              text: `  ←  ${p.importLabels.join(", ")}`,
+              size: 18,
+              font: "Arial",
+              color: MUTED,
+            }),
+          ],
+          spacing: { after: 60 },
+        }),
+      );
+    }
+    children.push(new Paragraph({ spacing: { after: 200 } }));
   }
 
   // Artifacts

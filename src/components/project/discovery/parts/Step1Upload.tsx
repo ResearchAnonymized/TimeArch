@@ -1,8 +1,12 @@
+/**
+ * Step 1 — Import system.
+ * Demo mode: pick a sample project.
+ * Live mode: GitHub URL or ZIP / files.
+ */
 import { useRef, useState } from "react";
 import {
-  AlertTriangle,
   ArrowRight,
-  CheckCircle2,
+  Github,
   Loader2,
   Package,
   Sparkles,
@@ -11,308 +15,234 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
   KIND_META,
   type ProjectImport,
   type RemotePreset,
-  type SeededPreset,
 } from "@/features/discovery/types";
+import type { BrownfieldMode } from "./ModeToggle";
 
 interface Props {
+  mode: BrownfieldMode;
   imports: ProjectImport[];
   uploading: boolean;
   reversing: boolean;
   loadingDemo: string | null;
   hasImports: boolean;
-  seededPreset: SeededPreset | null;
   remotePresets: RemotePreset[];
   onFiles: (files: FileList | File[]) => void;
   onLoadDemoPack: () => void;
   onLoadRemotePreset: (preset: RemotePreset) => void;
+  onLoadGithubRepo: (repoUrl: string, ref?: string) => void;
   onDelete: (imp: ProjectImport) => void;
   onNext: () => void;
 }
 
 export default function Step1Upload({
+  mode,
   imports,
   uploading,
   reversing,
   loadingDemo,
   hasImports,
-  seededPreset,
   remotePresets,
   onFiles,
   onLoadDemoPack,
   onLoadRemotePreset,
+  onLoadGithubRepo,
   onDelete,
   onNext,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [githubUrl, setGithubUrl] = useState("");
+  const [githubRef, setGithubRef] = useState("");
+  const githubBusy = loadingDemo === "github";
+  const busy = !!loadingDemo || reversing || uploading;
 
   return (
-    <section className="rounded-xl border bg-card p-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
-      <div className="mb-4">
+    <section className="rounded-xl border bg-card p-6 animate-in fade-in-50 duration-300 space-y-5">
+      <div>
         <h3 className="font-display text-base font-bold mb-1">
-          What do you have from the existing system?
+          {mode === "demo" ? "Choose a demo project" : "Import your system"}
         </h3>
         <p className="text-xs text-muted-foreground">
-          Drop in anything — code, schemas, API specs, requirement docs, old ADRs. We'll figure out
-          what each file is.
+          {mode === "demo"
+            ? "Pick a sample. We load files and recover the architecture automatically."
+            : "Paste a GitHub URL or upload a ZIP / source files. Then we recover the architecture."}
         </p>
       </div>
 
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          if (e.dataTransfer.files?.length) onFiles(e.dataTransfer.files);
-        }}
-        onClick={() => fileInputRef.current?.click()}
-        className={cn(
-          "rounded-xl border-2 border-dashed p-10 text-center cursor-pointer transition-all",
-          dragOver
-            ? "border-amber-500 bg-amber-500/10 scale-[1.01]"
-            : "border-border hover:border-amber-500/50 hover:bg-amber-500/5",
-        )}
-      >
-        <Upload
-          className={cn(
-            "h-10 w-10 mx-auto mb-3",
-            dragOver ? "text-amber-500" : "text-muted-foreground",
-          )}
-        />
-        <p className="text-sm font-semibold mb-1">Drop files here, or click to browse</p>
-        <p className="text-xs text-muted-foreground">
-          SQL · OpenAPI · ZIP of source · Markdown ADRs · SRS / PRD · Diagrams
-        </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            if (e.target.files?.length) onFiles(e.target.files);
-            e.target.value = "";
-          }}
-        />
-      </div>
-
-      {seededPreset && (
-        <div className="mt-4 rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent p-4">
-          <div className="flex items-start gap-3">
-            <div className="h-9 w-9 rounded-md bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <Package className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                <p className="text-sm font-semibold truncate">
-                  {hasImports ? "Seeded from" : "Selected starter:"} {seededPreset.name}
-                </p>
-                {seededPreset.tag && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300"
-                  >
-                    {seededPreset.tag}
-                  </Badge>
-                )}
-                {hasImports && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
-                  >
-                    <CheckCircle2 className="h-2.5 w-2.5 mr-1" /> {imports.length} file
-                    {imports.length === 1 ? "" : "s"} loaded
-                  </Badge>
+      {mode === "demo" && (
+        <div className="space-y-3">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onLoadDemoPack}
+            className="w-full text-left rounded-xl border p-4 hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors disabled:opacity-50"
+          >
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                {busy && loadingDemo === "demo" ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                ) : (
+                  <Package className="h-5 w-5 text-blue-600" />
                 )}
               </div>
-              {seededPreset.description && (
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {seededPreset.description}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-sm font-semibold">ShopFlow legacy e-commerce</p>
+                  <Badge variant="outline" className="text-[10px]">
+                    starter
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Synthetic OpenAPI, schema, SRS, and ADRs — best for a quick walkthrough.
                 </p>
-              )}
-              <div className="flex items-center gap-3 mt-1.5">
-                {seededPreset.sourceRepo && (
-                  <a
-                    href={seededPreset.sourceRepo}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] text-amber-700 dark:text-amber-300 hover:underline"
-                  >
-                    {seededPreset.sourceRepo.replace("https://github.com/", "")} ↗
-                  </a>
-                )}
-                {!hasImports && (
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      onLoadRemotePreset({
-                        id: seededPreset.id,
-                        title: seededPreset.name,
-                        blurb: seededPreset.description || "",
-                        source_repo: seededPreset.sourceRepo || "",
-                        license: "",
-                        scale: "small",
-                        expected_runtime: "",
-                        file_count: 1,
-                        kinds: [],
-                      })
-                    }
-                    disabled={!!loadingDemo || reversing}
-                    className="ml-auto h-7 px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
-                  >
-                    {loadingDemo || reversing ? (
-                      <>
-                        <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> Fetching…
-                      </>
+              </div>
+              <Sparkles className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+            </div>
+          </button>
+
+          {remotePresets.slice(0, 4).map((p) => {
+            const isBusy = loadingDemo === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={busy}
+                onClick={() => onLoadRemotePreset(p)}
+                className="w-full text-left rounded-xl border p-4 hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors disabled:opacity-50"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                    {isBusy ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <>
-                        <Sparkles className="h-3 w-3 mr-1.5" /> Fetch files now
-                      </>
+                      <Github className="h-5 w-5 text-muted-foreground" />
                     )}
-                  </Button>
-                )}
-              </div>
-              {!hasImports && (
-                <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80 mt-2 flex items-center gap-1.5">
-                  <AlertTriangle className="h-3 w-3" />
-                  Seeding didn't complete during project creation — click "Fetch files now" to retry.
-                </p>
-              )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <p className="text-sm font-semibold truncate">{p.title}</p>
+                      <Badge variant="outline" className="text-[10px]">
+                        {p.scale}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{p.blurb}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {mode === "live" && (
+        <div className="space-y-4">
+          <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Github className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="github-repo-url" className="text-sm font-semibold">
+                GitHub repository
+              </Label>
             </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                id="github-repo-url"
+                placeholder="https://github.com/org/repo"
+                value={githubUrl}
+                onChange={(e) => setGithubUrl(e.target.value)}
+                disabled={busy}
+                className="flex-1 font-mono text-xs"
+              />
+              <Input
+                placeholder="Branch (optional)"
+                value={githubRef}
+                onChange={(e) => setGithubRef(e.target.value)}
+                disabled={busy}
+                className="sm:w-36 font-mono text-xs"
+              />
+              <Button
+                type="button"
+                onClick={() => onLoadGithubRepo(githubUrl, githubRef || undefined)}
+                disabled={!githubUrl.trim() || busy}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0"
+              >
+                {githubBusy ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Importing…
+                  </>
+                ) : (
+                  <>
+                    <Github className="h-3.5 w-3.5 mr-1.5" /> Import
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="relative flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (e.dataTransfer.files?.length) onFiles(e.dataTransfer.files);
+            }}
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              "rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-all",
+              dragOver
+                ? "border-emerald-500 bg-emerald-500/10"
+                : "border-border hover:border-emerald-500/40 hover:bg-emerald-500/5",
+            )}
+          >
+            <Upload
+              className={cn(
+                "h-8 w-8 mx-auto mb-2",
+                dragOver ? "text-emerald-600" : "text-muted-foreground",
+              )}
+            />
+            <p className="text-sm font-semibold mb-1">Drop a ZIP or source files</p>
+            <p className="text-xs text-muted-foreground">
+              ZIP of repo · code · OpenAPI · SQL · Markdown docs
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".zip,.py,.js,.ts,.tsx,.jsx,.java,.go,.sql,.yaml,.yml,.json,.md,.txt,.html,.css"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.length) onFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
           </div>
         </div>
       )}
 
-      {!hasImports && !seededPreset && (
-        <>
-          <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <Package className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold">No files handy?</p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  Try the ShopFlow legacy e-commerce demo (5 synthetic artifacts).
-                </p>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onLoadDemoPack}
-              disabled={!!loadingDemo || reversing}
-            >
-              {loadingDemo || reversing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                "One-click demo"
-              )}
-            </Button>
-          </div>
-
-          {remotePresets.length > 0 && (
-            <div className="mt-5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
-                  Or pull a real open-source project
-                </p>
-                <span className="text-[10px] text-muted-foreground">live from GitHub</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {remotePresets.map((p) => {
-                  const isBusy = loadingDemo === p.id;
-                  return (
-                    <div
-                      key={p.id}
-                      className="rounded-lg border bg-background p-3 flex flex-col gap-2"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate">{p.title}</p>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2">
-                            {p.blurb}
-                          </p>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px] flex-shrink-0",
-                            p.scale === "small" &&
-                              "border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
-                            p.scale === "medium" &&
-                              "border-amber-500/40 text-amber-700 dark:text-amber-300",
-                            p.scale === "large" &&
-                              "border-rose-500/40 text-rose-700 dark:text-rose-300",
-                          )}
-                        >
-                          {p.scale}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {p.kinds.map((k) => (
-                          <span
-                            key={k}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono"
-                          >
-                            {k}
-                          </span>
-                        ))}
-                        <span className="text-[10px] text-muted-foreground ml-auto">
-                          {p.expected_runtime} · {p.license}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 mt-1">
-                        <a
-                          href={p.source_repo}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[11px] text-muted-foreground hover:text-amber-600 truncate"
-                        >
-                          {p.source_repo.replace("https://github.com/", "")}
-                        </a>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={!!loadingDemo || reversing}
-                          onClick={() => onLoadRemotePreset(p)}
-                          className="flex-shrink-0"
-                        >
-                          {isBusy ? (
-                            <>
-                              <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> Pulling…
-                            </>
-                          ) : (
-                            <>Use this demo</>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {(uploading || hasImports) && (
-        <div className="mt-5">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
-              {imports.length} file{imports.length === 1 ? "" : "s"} added
-            </p>
-            {uploading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-          </div>
-          <div className="space-y-1 max-h-48 overflow-auto">
+      {hasImports && (
+        <div>
+          <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground mb-2">
+            {imports.length} file{imports.length === 1 ? "" : "s"} loaded
+          </p>
+          <div className="space-y-1 max-h-40 overflow-auto">
             {imports.map((imp) => {
-              const meta = KIND_META[imp.kind];
+              const meta = KIND_META[imp.kind] || KIND_META.other;
               const Icon = meta.icon;
               return (
                 <div
@@ -337,13 +267,24 @@ export default function Step1Upload({
         </div>
       )}
 
-      <div className="flex items-center justify-end mt-6 pt-4 border-t">
+      <div className="flex items-center justify-end pt-2 border-t">
         <Button
           onClick={onNext}
-          disabled={!hasImports}
-          className="bg-amber-600 hover:bg-amber-700 text-white"
+          disabled={!hasImports || busy}
+          className={cn(
+            "text-white",
+            mode === "live" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700",
+          )}
         >
-          Next: Let AI read them <ArrowRight className="h-4 w-4 ml-2" />
+          {reversing ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Reading system…
+            </>
+          ) : (
+            <>
+              Next: Recover architecture <ArrowRight className="h-4 w-4 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </section>

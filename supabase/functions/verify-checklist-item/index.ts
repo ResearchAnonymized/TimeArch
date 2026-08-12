@@ -1,6 +1,5 @@
 // Verify a single checklist item against the stage's primary artifact using
-import { getLlmApiKey, getLlmChatCompletionsUrl } from "../_shared/llm-config.ts";
-// the LLM API (Gemini Flash). Returns a structured verdict.
+// the Lovable AI Gateway (Gemini Flash). Returns a structured verdict.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -10,7 +9,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LLM_API_KEY = Deno.env.get("LLM_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -126,10 +125,10 @@ ${artifactText}
 
 Evaluate whether this checklist item is addressed. Respond with the JSON object only.`;
 
-    const aiRes = await fetch(getLlmChatCompletionsUrl(), {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LLM_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

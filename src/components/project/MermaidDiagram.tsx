@@ -566,6 +566,7 @@ function createFlowchartFallback(raw: string): string {
     }
 
     if (/^(style\b|classDef\b|class\b|linkStyle\b|click\b)/i.test(trimmed)) {
+      output.push(line);
       continue;
     }
 

@@ -146,19 +146,86 @@ export function useDiscoveryImports({
           toast.error(errorOf(res).message || "Reverse-engineering failed");
           return false;
         }
-        const okN = (res.value.results || []).filter((r) => r.status === "parsed").length;
-        const failedN = (res.value.results || []).filter((r) => r.status === "failed").length;
+
+        const results = res.value.results || [];
+        const okN = results.filter((r) => r.status === "parsed").length;
+        const failedN = results.filter((r) => r.status === "failed").length;
+        const alreadyN = results.filter((r) => r.status === "already_parsed").length;
+        const skippedUrlN = results.filter((r) => r.status === "skipped_url").length;
+        const processed = res.value.processed ?? results.length;
+
+        const finishParsed = async (opts?: { seedChange?: boolean }) => {
+          await load();
+          onParsedRef.current();
+          if (opts?.seedChange === false || !userId) return;
+          const seed = await discoveryService.ensureDraftFeatureChange({
+            projectId,
+            userId,
+            title: "Improve discovered architecture",
+            description:
+              "Auto-drafted after reverse-engineering. Edit title/behavior, Score it, then run Map → Plan (or Multi-agent Run all) to produce work items / tasks.",
+          });
+          if (seed.ok && seed.value.created) {
+            toast.info("Draft feature change created", {
+              description: "Open Feature changes → then Auto-run remaining to generate tasks.",
+            });
+          }
+        };
+
+        // Nothing left to parse (all imports already status=parsed, reprocess=false).
+        if (processed === 0 || results.length === 0) {
+          toast.info("All uploaded files were already analyzed", {
+            description:
+              'Use “Re-run from scratch” to parse again, or continue to Explore findings.',
+          });
+          await finishParsed();
+          return true;
+        }
+
+        if (okN === 0 && alreadyN > 0) {
+          toast.info(`${alreadyN} file${alreadyN === 1 ? "" : "s"} already analyzed`);
+          await finishParsed();
+          return true;
+        }
+
+        if (okN === 0 && failedN > 0) {
+          toast.error(`Could not parse ${failedN} file${failedN === 1 ? "" : "s"}`, {
+            description: results
+              .filter((r) => r.status === "failed")
+              .slice(0, 3)
+              .map((r) => r.error || r.filename || "unknown error")
+              .join("\n"),
+          });
+          await load();
+          return false;
+        }
+
+        if (okN === 0 && skippedUrlN > 0) {
+          toast.info(`Recorded ${skippedUrlN} URL reference${skippedUrlN === 1 ? "" : "s"}`, {
+            description: "Remote fetch is not performed for link-only imports.",
+          });
+          await finishParsed();
+          return true;
+        }
+
+        if (okN === 0) {
+          toast.info(res.value.message || "No new files were parsed", {
+            description: 'Use “Re-run from scratch” if you need a fresh pass.',
+          });
+          await finishParsed();
+          return true;
+        }
+
         toast.success(
           `Read ${okN} file${okN === 1 ? "" : "s"}${failedN ? `, ${failedN} failed` : ""}`,
         );
-        await load();
-        onParsedRef.current();
+        await finishParsed();
         return true;
       } finally {
         setReversing(false);
       }
     },
-    [projectId, load],
+    [projectId, userId, load],
   );
 
   const loadDemoPack = useCallback(
@@ -241,6 +308,78 @@ export function useDiscoveryImports({
     [projectId, userId, load, runReverseEngineer],
   );
 
+  const loadGithubRepo = useCallback(
+    async (repoUrl: string, ref?: string, autoRun = true) => {
+      if (!userId) return;
+      const trimmed = repoUrl.trim();
+      if (!trimmed) {
+        toast.error("Enter a GitHub repository URL");
+        return;
+      }
+      setLoadingDemo("github");
+      try {
+        toast.info("Fetching from GitHub…", {
+          description: "Listing repository files and downloading source. This may take 15–60s.",
+        });
+        const res = await discoveryService.fetchGithubRepo({
+          project_id: projectId,
+          repo_url: trimmed,
+          ref: ref?.trim() || undefined,
+        });
+        if (!res.ok) {
+          toast.error(errorOf(res).message || "GitHub import failed");
+          return;
+        }
+        const r = res.value;
+        if (r.error) {
+          toast.error(r.error);
+          return;
+        }
+        const failed = (r.results || []).filter((x) => x.status === "failed");
+        const kindSummary = r.kinds
+          ? Object.entries(r.kinds)
+              .map(([k, n]) => `${n} ${k}`)
+              .join(", ")
+          : "";
+        if (r.uploaded > 0) {
+          toast.success(
+            `Imported ${r.uploaded} file${r.uploaded === 1 ? "" : "s"} from ${r.owner}/${r.repo}`,
+            {
+              description: [
+                r.discovered > r.selected
+                  ? `${r.discovered} found, top ${r.selected} selected`
+                  : `${r.discovered} files in repo`,
+                kindSummary,
+              ]
+                .filter(Boolean)
+                .join(" · "),
+            },
+          );
+        } else {
+          toast.error(`Could not import from ${r.owner}/${r.repo}`, {
+            description: failed[0]?.error || "No readable source files found",
+          });
+        }
+        if (failed.length > 0 && r.uploaded > 0) {
+          toast.warning(`${failed.length} file${failed.length === 1 ? "" : "s"} skipped`, {
+            description: failed
+              .slice(0, 2)
+              .map((f) => `${f.path}: ${f.error || "failed"}`)
+              .join("\n"),
+          });
+        }
+        await load();
+        if (r.uploaded > 0) onAllUploadedRef.current();
+        if (autoRun && r.uploaded > 0) {
+          await runReverseEngineer(false);
+        }
+      } finally {
+        setLoadingDemo(null);
+      }
+    },
+    [projectId, userId, load, runReverseEngineer],
+  );
+
   const deleteImport = useCallback(
     async (imp: ProjectImport) => {
       const res = await discoveryService.deleteImport(imp);
@@ -257,6 +396,7 @@ export function useDiscoveryImports({
   }, [imports]);
 
   const parsedCount = imports.filter((i) => i.status === "parsed").length;
+  const pendingCount = imports.filter((i) => i.status === "pending" || i.status === "failed").length;
   const findings = imports
     .filter((i) => i.status === "parsed" && i.parsed_summary)
     .reduce(
@@ -281,6 +421,7 @@ export function useDiscoveryImports({
     loadingDemo,
     lastActivity,
     parsedCount,
+    pendingCount,
     findings,
     hasImports: imports.length > 0,
     hasParsed: parsedCount > 0,
@@ -289,6 +430,7 @@ export function useDiscoveryImports({
     runReverseEngineer,
     loadDemoPack,
     loadRemotePreset,
+    loadGithubRepo,
     deleteImport,
   };
 }

@@ -34,12 +34,12 @@ interface Gap {
 const SEVERITY_STYLE: Record<string, string> = {
   critical: "bg-destructive/15 text-destructive border-destructive/30",
   high: "bg-destructive/10 text-destructive border-destructive/20",
-  medium: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  medium: "bg-blue-500/15 text-blue-600 border-blue-500/30",
   low: "bg-muted text-muted-foreground border-border",
 };
 const EFFORT_STYLE: Record<string, string> = {
   high: "bg-destructive/10 text-destructive",
-  medium: "bg-amber-500/10 text-amber-600",
+  medium: "bg-blue-500/10 text-blue-600",
   low: "bg-emerald-500/10 text-emerald-600",
 };
 
@@ -107,10 +107,10 @@ export default function GapAnalysisPanel({ projectId }: Props) {
   return (
     <div className="space-y-4">
       {/* Hero */}
-      <div className="rounded-xl border bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-5">
+      <div className="rounded-xl border bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-5">
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-            <ShieldAlert className="h-5 w-5 text-amber-600" />
+          <div className="h-10 w-10 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+            <ShieldAlert className="h-5 w-5 text-blue-600" />
           </div>
           <div className="flex-1">
             <h2 className="font-display text-lg font-bold mb-1">Gap Analysis (Brownfield)</h2>

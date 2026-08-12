@@ -1,5 +1,4 @@
 // Gap Analyzer Agent (Brownfield) — compares as-is reverse-engineered artifacts
-import { getLlmApiKey, getLlmChatCompletionsUrl } from "../_shared/llm-config.ts";
 // against ISO 25010 / AWS Well-Architected pillars and persists deficits to
 // public.architecture_gaps for the Evolution Plan workspace to consume.
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
@@ -11,7 +10,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LLM_API_KEY = Deno.env.get("LLM_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const ok = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -107,9 +106,9 @@ async function llmGaps(context: string, supabase: any): Promise<any[]> {
     const DEFAULT_GAP_PROMPT = "You are an architecture reviewer. Given an as-is system summary, return ISO/IEC 25010 and AWS Well-Architected gaps as STRICT JSON: {\"gaps\":[{\"category\":\"\",\"framework\":\"iso_25010|aws_wa\",\"title\":\"\",\"current_state\":\"\",\"target_state\":\"\",\"severity\":\"low|medium|high|critical\",\"effort\":\"low|medium|high\",\"recommendation\":\"\"}]} — max 8 gaps, no prose.";
     const { resolvePrompt } = await import("../_shared/prompts.ts");
     const systemPrompt = await resolvePrompt(supabase, "gap-analyzer.system", DEFAULT_GAP_PROMPT);
-    const res = await fetch(getLlmChatCompletionsUrl(), {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LLM_API_KEY}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [

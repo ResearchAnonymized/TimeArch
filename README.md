@@ -1,161 +1,84 @@
 # TimeArch
 
-**A governed, multi-agent platform for software architecture design and evolution.**
-
-TimeArch guides teams from heterogeneous requirements through a structured 18-stage lifecycle—requirements analysis, architecture design, validation, governance, and controlled delivery—using specialized AI agents grounded in standards (ISO 25010, AWS Well-Architected, SEI ADD) and human approval gates.
-
-Companion open-source artifact to the ECSA 2026 Industry Track paper *TimeArch: A Multi-Agent Approach for Software Architecture Design*.
+A multi-agent LLM lifecycle for software architecture design and evolution.
+Companion artifact to the ECSA 2026 industry-track paper of the same name.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![ECSA 2026](https://img.shields.io/badge/ECSA%202026-Artifact-blue)](ARTIFACT.md)
-[![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.20090303-blue)](https://doi.org/10.5281/zenodo.20090303)
+[![ECSA 2026 AE](https://img.shields.io/badge/ECSA%202026-Artifact%20Evaluation-blue)](ARTIFACT.md)
+[![Replay mode](https://img.shields.io/badge/LLM__MODE-replay-green)](reproducibility/README.md)
 
 ---
 
-## Highlights
-
-- **18-stage lifecycle** across four phases: Define → Design → Validate → Deliver & Evolve
-- **Multi-agent orchestration** — generator, challenger, critic, and verifier roles with traceable outputs
-- **RAG-grounded reasoning** — retrieval from a curated architecture knowledge base before each agent run
-- **Governance by design** — stage locking, package-lock gates, and formal approval before code generation
-- **Brownfield discovery** — reverse engineering, gap analysis, drift detection, and Gartner 6R / TIME disposition
-- **Professional exports** — SRS, SAD, ADRs, and assessment reports (PDF / DOCX)
-- **Replay mode** — deterministic LLM playback for research reproduction without API keys
-
----
-
-## Quick start (macOS / Linux)
-
-**New here?** Follow the step-by-step guide: **[docs/GETTING-STARTED.md](docs/GETTING-STARTED.md)** (~3–4 minutes).
+## TL;DR for ECSA reviewers
 
 ```bash
-git clone https://github.com/ResearchAnonymized/TimeArch.git
-cd TimeArch
-cp .env.example .env
-npm install --legacy-peer-deps
-npm run dev
+git clone <this repo> timearch && cd timearch
+cp .env.example .env          # LLM_MODE=replay (no API key needed)
+bash scripts/smoke-test.sh    # ≤ 2 min — sanity check
+bash scripts/reproduce.sh     # ≤ 30 min — full paper reproduction
 ```
 
-Open **http://localhost:8080** in your browser. Sign in (or create an account), then start a new project from the dashboard.
+Outputs land in `reproducibility/_out/`. See **[ARTIFACT.md](ARTIFACT.md)**
+for the full AE submission (badges, claims → files mapping, limitations).
 
-| Requirement | Version |
-|-------------|---------|
-| Node.js | 20 LTS or newer (22+ recommended) |
-| npm | 10+ |
-| RAM | 8 GB recommended |
-| Disk | ~3 GB (including `node_modules`) |
+## Running the app interactively
 
-> **Note:** Bun is optional. Use `npm install --legacy-peer-deps` to avoid peer-dependency conflicts with Vite 8.
-
----
-
-## What you can do
-
-| Workflow | Description |
-|----------|-------------|
-| **Greenfield project** | Paste requirements, run stages 1–18, review agent outputs, approve architecture, export documents |
-| **Brownfield project** | Upload legacy artifacts (SRS, ADRs, OpenAPI, SQL), run discovery, disposition, and evolution planning |
-| **Prompt library** | Inspect and edit system prompts at runtime (admin) |
-| **Replay / research** | Run `bash scripts/smoke-test.sh` and `bash scripts/reproduce.sh` in `LLM_MODE=replay` — see [ARTIFACT.md](ARTIFACT.md) |
-
-Live demo (hosted): [https://sda-assistant.com/](https://sda-assistant.com/)
-
----
-
-## Configuration
-
-Copy `.env.example` to `.env`. The frontend needs Supabase publishable credentials (included in the example for the shared demo backend):
-
-```env
-VITE_SUPABASE_URL=https://...
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
-VITE_SUPABASE_PROJECT_ID=...
+```bash
+bun install
+bun run dev                   # http://localhost:5173
 ```
 
-For **live LLM runs** on your own Supabase deployment, configure edge-function secrets:
+The frontend connects to Lovable Cloud with the publishable anon key in
+`.env.example`. Sign in, create a project, and walk through the 18-stage
+lifecycle in the workspace.
 
-```env
-LLM_API_KEY=sk-...
-LLM_API_BASE_URL=https://api.openai.com   # any OpenAI-compatible endpoint
-```
+## Wiki (multi-team factory)
 
-For **artifact reproduction** only:
+Partner planning docs for RE → TimeArch → Coding via orchestration:
 
-```env
-LLM_MODE=replay
-LLM_CASSETTE_PATH=./reproducibility/llm-cassette.json
-```
-
----
+- [Wiki home](docs/wiki/Home.md)
+- [Software Factory Integration](docs/wiki/Software-Factory-Integration.md)
+- [Diagrams](docs/wiki/Diagrams.md)
+- [Software Delivery Package (SDP)](docs/wiki/Software-Delivery-Package.md)
+- [Team Decisions Log](docs/wiki/Team-Decisions-Log.md)
 
 ## Repository layout
 
 ```
-TimeArch/
-├── src/                          React + Vite frontend (workspace UI)
-├── supabase/
-│   ├── functions/                Deno edge functions (agents, one folder each)
-│   ├── migrations/               PostgreSQL schema, RLS, RAG search
-│   └── functions/_shared/
-│       └── prompt-defaults/      Versioned system prompts
-├── public/demo/brownfield/       ShopFlow demo pack (SRS, ADRs, OpenAPI, SQL)
-├── scripts/                      smoke-test.sh, reproduce.sh, brownfield runner
-├── reproducibility/              LLM cassette, baseline, N=10 repeatability data
-├── docs/
-│   ├── GETTING-STARTED.md         Local setup guide (start here)
-│   ├── ARCHITECTURE.md           Code conventions and patterns
-│   └── INTEGRATIONS.md           MCP, API, external tools
-├── ARTIFACT.md                   ECSA artifact evaluation guide
-└── OPEN-SCIENCE.md               Open science statement
+src/                          React + Vite frontend
+supabase/functions/           Deno edge functions (one folder per agent)
+supabase/migrations/          Database schema + RLS + GRANTs
+public/demo/brownfield/       ShopFlow demo pack (SRS, ADRs, OpenAPI, SQL)
+scripts/                      reproduce.sh, smoke-test.sh, brownfield runner
+reproducibility/              Cassette, baseline, N=10 repeatability CSV
+docs/ARCHITECTURE.md          High-level architecture overview
+ARTIFACT.md                   ECSA 2026 AE submission document
+CITATION.cff                  How to cite the paper + artifact
 ```
 
----
+## Claims (paper) → evidence (this repo)
 
-## Development commands
+| Claim (paper §) | Evidence |
+|---|---|
+| 18-stage lifecycle across 4 phases (§3.2) | `supabase/functions/stage-*`, `prompts/` |
+| Multi-agent roles Generator / Challenger / Critic / Verifier (§3.3) | `supabase/functions/_shared/agent-runtime/` |
+| Weighted PostgreSQL `tsvector` RAG grounding (§3.4) | `supabase/migrations/*rag*.sql` |
+| Governance engine with package-lock gate (§3.5) | `supabase/functions/_shared/package-lock.ts`, Stage 15 UI |
+| Brownfield disposition (Gartner 6R ∪ TIME) (§4.3) | `supabase/functions/system-disposition-analyzer/`, baseline in `reproducibility/baseline/disposition-shopflow.json` |
+| Repeatability CV ≤ 0.05 across stages (§4.2) | `reproducibility/repeatability-N10.csv` |
+| Three-layer retry / iteration logic (§3.6) | `supabase/functions/_shared/agent-runtime/` (transport + repair + HITL) |
+| 28 externalised prompts, editable at runtime | `prompts/`, `public.prompt_overrides`, `/prompts` UI |
+| Feasibility on ITS, IoT, MoodFlow (§4.4) | `reproducibility/cases/` |
 
-```bash
-npm run dev          # Start dev server → http://localhost:8080
-npm run build        # Production build
-npm run test         # Unit tests (Vitest)
-npm run lint         # ESLint
-npm run preview      # Preview production build locally
-```
+## Open Science
 
----
-
-## Research & citation
-
-| Resource | Link |
-|----------|------|
-| Artifact evaluation | [ARTIFACT.md](ARTIFACT.md) |
-| Open science / protocol | [OPEN-SCIENCE.md](OPEN-SCIENCE.md) |
-| Persistent archive | [Zenodo DOI 10.5281/zenodo.20090303](https://doi.org/10.5281/zenodo.20090303) |
-| Citation metadata | [CITATION.cff](CITATION.cff) |
-
-**ECSA reviewers** — minimal reproduction path:
-
-```bash
-bash scripts/smoke-test.sh
-LLM_MODE=replay bash scripts/reproduce.sh
-```
-
-Outputs are written to `reproducibility/_out/`.
-
----
-
-## Contributing
-
-See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for code style, folder layout, and pull-request expectations.
-
----
+See [`OPEN-SCIENCE.md`](OPEN-SCIENCE.md) for the data / methods / limitations
+statement, the preregistered evaluation protocol, and the raw scores used in
+the paper. Persistent archive:
+[Zenodo 10.5281/zenodo.20090303](https://doi.org/10.5281/zenodo.20090303).
 
 ## License
 
-- **Source code:** [MIT](LICENSE)
-- **Demo data & recorded LLM outputs:** CC BY 4.0
+MIT — see [`LICENSE`](LICENSE). Demo data and recorded LLM outputs are
+released under CC BY 4.0.
 
----
-
-## Acknowledgements
-
-Supported by Business Finland under project ANSE (1822/31/2025).

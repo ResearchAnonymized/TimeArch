@@ -25,6 +25,9 @@ import GapAnalysisPanel from "./discovery/GapAnalysisPanel";
 import EvolutionPlanWorkspace from "./discovery/EvolutionPlanWorkspace";
 import DriftDetectionPanel from "./discovery/DriftDetectionPanel";
 import BrownfieldRequirementsView from "./discovery/BrownfieldRequirementsView";
+import Iso25010ScorePanel from "./discovery/Iso25010ScorePanel";
+import SevenRRoadmapPanel from "./discovery/SevenRRoadmapPanel";
+import StyleClassifierPanel from "./discovery/StyleClassifierPanel";
 
 interface Stage {
   id: number;
@@ -87,13 +90,20 @@ export default function SynthesisPane({
       case 4:
       case 5:
         return (
-          <ArchitectureDecisionWorkspace
-            projectId={projectId}
-            currentStage={currentStage}
-            refreshKey={refreshKey}
-            {...runProps}
-            onAdvance={onAdvance}
-          />
+          <>
+            {isBrownfield && currentStage === 5 && (
+              <div className="mb-6">
+                <StyleClassifierPanel projectId={projectId} />
+              </div>
+            )}
+            <ArchitectureDecisionWorkspace
+              projectId={projectId}
+              currentStage={currentStage}
+              refreshKey={refreshKey}
+              {...runProps}
+              onAdvance={onAdvance}
+            />
+          </>
         );
       case 6:
         return (
@@ -144,8 +154,9 @@ export default function SynthesisPane({
         return (
           <>
             {isBrownfield && (
-              <div className="mb-6">
+              <div className="mb-6 space-y-6">
                 <GapAnalysisPanel projectId={projectId} />
+                <Iso25010ScorePanel projectId={projectId} />
               </div>
             )}
             <QualityAttributesWorkspace
@@ -244,7 +255,12 @@ export default function SynthesisPane({
         return <ApprovalWorkspace projectId={projectId} />;
       default:
         if (currentStage === 16 && isBrownfield) {
-          return <EvolutionPlanWorkspace projectId={projectId} />;
+          return (
+            <div className="space-y-6">
+              <SevenRRoadmapPanel projectId={projectId} />
+              <EvolutionPlanWorkspace projectId={projectId} />
+            </div>
+          );
         }
         if (currentStage === 18 && isBrownfield) {
           return (

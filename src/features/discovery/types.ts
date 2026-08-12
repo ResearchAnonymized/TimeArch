@@ -62,18 +62,26 @@ export const KIND_META: Record<ImportKind, KindMeta> = {
   other: { label: "Other", icon: FileText },
 };
 
-/** Auto-detect import kind from filename. */
+/** Auto-detect import kind from filename (mirrors edge `_shared/import-kind.ts`). */
 export function detectKind(name: string): ImportKind {
-  const n = name.toLowerCase();
-  if (/\.(zip|tar|gz)$/.test(n)) return "repo";
-  if (/openapi|swagger|\.ya?ml$|\.json$/.test(n) && /api|openapi|swagger/.test(n)) return "openapi";
-  if (/\.ya?ml$/.test(n) && /openapi|swagger/.test(n)) return "openapi";
-  if (/\.(sql|ddl)$/.test(n) || /schema/.test(n)) return "db_schema";
-  if (/adr|decision/.test(n)) return "adr";
-  if (/srs|brd|prd|requirement|spec/.test(n)) return "srs";
+  const n = name.replace(/\\/g, "/").toLowerCase();
+  const base = n.split("/").pop() || n;
+
+  if (/\.(zip|tar|gz|tgz)$/.test(n)) return "repo";
+  if (/openapi|swagger/.test(n) && /\.(ya?ml|json)$/.test(n)) return "openapi";
+  if (/\.(sql|ddl)$/.test(n) || /schema\.prisma$/.test(n) || /\/migrations\/.+\.sql$/.test(n)) {
+    return "db_schema";
+  }
+  if (/adr|decision/.test(n) && /\.md$/.test(n)) return "adr";
+  if (/^readme\.md$/.test(base) || /\/(srs|brd|prd|requirements?)\./.test(n)) return "srs";
   if (/\.(png|jpe?g|svg|drawio|puml|mmd)$/.test(n)) return "diagram";
+  if (/\.(md|txt)$/.test(n) && /docs\//.test(n)) return "srs";
+  if (/\.(py|js|jsx|ts|tsx|java|go|cs|rb|php|vue|svelte|html|htm|css|scss)$/.test(n)) return "repo";
+  if (/package\.json$|requirements\.txt$|pyproject\.toml$|\.csproj$|pom\.xml$|go\.mod$/.test(n)) {
+    return "other";
+  }
   if (/\.ya?ml$|\.json$/.test(n)) return "openapi";
-  if (/\.md$|\.txt$|\.docx?$/.test(n)) return "srs";
+  if (/\.md$/.test(n)) return "srs";
   return "other";
 }
 

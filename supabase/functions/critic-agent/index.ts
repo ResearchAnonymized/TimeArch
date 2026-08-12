@@ -1,5 +1,4 @@
 // Requirement Critic Agent
-import { getLlmApiKey, getLlmChatCompletionsUrl } from "../_shared/llm-config.ts";
 // Reviews AI-extracted requirements (Stage 2) or architecture drivers (Stage 3)
 // against ISO/IEC/IEEE 29148 + INCOSE quality criteria. Produces per-item
 // verdicts (approve / revise / reject) with rationale and suggested rewrites.
@@ -17,7 +16,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LLM_API_KEY = Deno.env.get("LLM_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -120,9 +119,9 @@ Deno.serve(async (req) => {
       items.map((i) => i.text).join("\n\n---\n\n")
     }\n\nReturn JSON { "reviews": [...] } with one entry per item.`;
 
-    const aiRes = await fetch(getLlmChatCompletionsUrl(), {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LLM_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-pro",
         messages: [

@@ -90,7 +90,7 @@ function computeWaves(gaps: Gap[]): Wave[] {
 const SEV_DOT: Record<string, string> = {
   critical: "bg-destructive",
   high: "bg-destructive/70",
-  medium: "bg-amber-500",
+  medium: "bg-blue-500",
   low: "bg-muted-foreground/40",
 };
 

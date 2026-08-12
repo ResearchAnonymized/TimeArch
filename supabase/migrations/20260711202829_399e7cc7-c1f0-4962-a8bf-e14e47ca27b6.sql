@@ -1,0 +1,1 @@
+DELETE FROM public.architecture_drivers WHERE project_id='d3b439ac-ab0a-4ef3-9c1c-45443d29d004' AND created_at < '2026-07-11 20:23:00+00';

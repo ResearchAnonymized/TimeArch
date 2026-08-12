@@ -49,12 +49,22 @@ export default function RequirementIntake({ projectId }: Props) {
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [audioData, setAudioData] = useState<AudioExtractionResult | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [projectMode, setProjectMode] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("projects")
+      .select("mode")
+      .eq("id", projectId)
+      .maybeSingle()
+      .then(({ data }) => setProjectMode((data as any)?.mode ?? null));
+  }, [projectId]);
 
   const fetchRequirements = useCallback(async () => {
     const { data } = await supabase
       .from("requirements")
       .select(
-        "id, requirement_id, title, description, type, priority, status, category, source, acceptance_criteria, locked_at",
+        "id, requirement_id, title, description, type, priority, status, category, source, acceptance_criteria, locked_at, change_type",
       )
       .eq("project_id", projectId)
       .order("requirement_id");
@@ -466,7 +476,7 @@ export default function RequirementIntake({ projectId }: Props) {
               </Button>
             </div>
           ) : (
-            <SavedRequirementsList requirements={requirements} onRefresh={fetchRequirements} />
+            <SavedRequirementsList requirements={requirements} onRefresh={fetchRequirements} projectMode={projectMode} />
           )}
         </TabsContent>
 

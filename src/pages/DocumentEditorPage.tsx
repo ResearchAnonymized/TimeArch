@@ -14,6 +14,7 @@ import {
   RotateCcw,
   CheckCircle2,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import DocumentSectionEditor from "@/components/document-editor/DocumentSectionE
 import DocumentFigureManager from "@/components/document-editor/DocumentFigureManager";
 import DocumentPreview from "@/components/document-editor/DocumentPreview";
 import DocumentExportBar from "@/components/document-editor/DocumentExportBar";
+import DocumentOrderValidatorPanel from "@/components/document-editor/DocumentOrderValidatorPanel";
 import {
   DocumentDraft,
   DocumentSection,
@@ -84,10 +86,11 @@ export default function DocumentEditorPage() {
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
   const typeFromUrl = searchParams.get("type");
-  const validTypes = ["srs", "sad", "assessment", "full_package"];
+  const validTypes = ["srs", "sad", "assessment", "full_package", "discovery"];
   const [selectedType, setSelectedType] = useState(
     typeFromUrl && validTypes.includes(typeFromUrl) ? typeFromUrl : "full_package",
   );
+  const [projectMode, setProjectMode] = useState<"greenfield" | "brownfield" | "hybrid">("greenfield");
 
   // Draft state
   const [draft, setDraft] = useState<DocumentDraft | null>(null);
@@ -102,7 +105,7 @@ export default function DocumentEditorPage() {
     setStep("generate");
     const load = async () => {
       const [projRes, draftRes] = await Promise.all([
-        supabase.from("projects").select("name, current_stage").eq("id", projectId).single(),
+        supabase.from("projects").select("name, current_stage, mode").eq("id", projectId).single(),
         supabase
           .from("architecture_artifacts")
           .select("*")
@@ -116,6 +119,10 @@ export default function DocumentEditorPage() {
       if (projRes.data) {
         setProjectName(projRes.data.name);
         setCurrentStage(projRes.data.current_stage);
+        const rawMode = String((projRes.data as any).mode ?? "greenfield").toLowerCase();
+        setProjectMode(
+          rawMode === "brownfield" ? "brownfield" : rawMode === "hybrid" ? "hybrid" : "greenfield",
+        );
       }
 
       // Find an existing draft that matches the currently selected document type
@@ -1160,6 +1167,36 @@ export default function DocumentEditorPage() {
           </span>
 
           <div className="ml-auto flex items-center gap-2">
+            <span
+              className={`hidden sm:inline text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                projectMode === "brownfield"
+                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                  : projectMode === "hybrid"
+                    ? "bg-violet-500/15 text-violet-700 dark:text-violet-300"
+                    : "bg-primary/15 text-primary"
+              }`}
+              title={`This project uses the ${projectMode} document templates`}
+            >
+              {projectMode}
+            </span>
+            {draft && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={() => {
+                  setDraft(null);
+                  setStep("generate");
+                  // Immediately re-run generation so the new project-mode template is used
+                  setTimeout(() => generateDocument(), 0);
+                }}
+                disabled={generating}
+                title="Regenerate this document with the current project-type template"
+              >
+                <Sparkles className="h-3 w-3" />
+                Regenerate
+              </Button>
+            )}
             {draft && (
               <Button
                 variant="outline"
@@ -1180,6 +1217,7 @@ export default function DocumentEditorPage() {
           </div>
         </div>
       </header>
+
 
       {/* Stepper */}
       <div className="border-b bg-card/50 px-4 py-3">
@@ -1234,38 +1272,43 @@ export default function DocumentEditorPage() {
                 </p>
               </div>
 
+              {/* Project mode badge */}
+              <div className="flex items-center justify-center gap-2 text-[11px]">
+                <span className="text-muted-foreground">Project type:</span>
+                <span
+                  className={`px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide ${
+                    projectMode === "brownfield"
+                      ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                      : projectMode === "hybrid"
+                        ? "bg-violet-500/15 text-violet-700 dark:text-violet-300"
+                        : "bg-primary/15 text-primary"
+                  }`}
+                >
+                  {projectMode}
+                </span>
+                <span className="text-muted-foreground">
+                  · document variants are tailored to this mode
+                </span>
+              </div>
+
               {/* Document type selection */}
               <div className="grid grid-cols-2 gap-3">
-                {[
-                  {
-                    id: "srs",
-                    label: "SRS",
-                    full: "Software Requirements Specification",
-                    standard: "IEEE 830",
-                    minStage: 3,
-                  },
-                  {
-                    id: "sad",
-                    label: "SAD",
-                    full: "Software Architecture Document",
-                    standard: "ISO 42010",
-                    minStage: 10,
-                  },
-                  {
-                    id: "assessment",
-                    label: "AAR",
-                    full: "Architecture Assessment Report",
-                    standard: "ATAM",
-                    minStage: 14,
-                  },
-                  {
-                    id: "full_package",
-                    label: "FAP",
-                    full: "Full Architecture Package",
-                    standard: "Enterprise",
-                    minStage: 14,
-                  },
-                ].map((doc) => {
+                {(() => {
+                  const baseDocs = [
+                    { id: "srs", label: "SRS", full: "Software Requirements Specification", standard: "IEEE 830", minStage: 3 },
+                    { id: "sad", label: "SAD", full: "Software Architecture Document", standard: "ISO 42010", minStage: 10 },
+                    { id: "assessment", label: "AAR", full: "Architecture Assessment Report", standard: "ATAM", minStage: 14 },
+                    { id: "full_package", label: "FAP", full: "Full Architecture Package", standard: "Enterprise", minStage: 14 },
+                  ];
+                  const discoveryDoc = {
+                    id: "discovery",
+                    label: "Discovery",
+                    full: "Brownfield Discovery Report",
+                    standard: "As-Is + Gap Analysis",
+                    minStage: 0,
+                  };
+                  return projectMode === "greenfield" ? baseDocs : [discoveryDoc, ...baseDocs];
+                })().map((doc) => {
                   const available = currentStage >= doc.minStage;
                   return (
                     <button
@@ -1299,6 +1342,7 @@ export default function DocumentEditorPage() {
                   );
                 })}
               </div>
+
 
               {/* Progress */}
               {generating && (
@@ -1339,7 +1383,9 @@ export default function DocumentEditorPage() {
           {/* Step 2: Edit */}
           {step === "edit" && draft && (
             <div className="space-y-4">
+              <DocumentOrderValidatorPanel draft={draft} />
               <Tabs value={editTab} onValueChange={setEditTab} className="w-full">
+
                 <div className="flex items-center justify-between mb-4">
                   <TabsList className="h-9">
                     <TabsTrigger value="sections" className="text-xs gap-1.5">

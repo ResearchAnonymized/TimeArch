@@ -31,10 +31,10 @@ serve(async (req) => {
       );
     }
 
-    const LLM_API_KEY = Deno.env.get("LLM_API_KEY");
-    if (!LLM_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "LLM_API_KEY not configured" }),
+        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -92,7 +92,7 @@ serve(async (req) => {
     // evaluate the latest primary recommendation for this stage. Does NOT
     // regenerate the primary recommendation.
     if (options?.challenge_only === true) {
-      return await runChallengeOnly({ supabase, project_id, stage, user_id, LLM_API_KEY });
+      return await runChallengeOnly({ supabase, project_id, stage, user_id, LOVABLE_API_KEY });
     }
 
     const handler = getStageHandler(stage);
@@ -143,14 +143,54 @@ serve(async (req) => {
       supabase.from("requirements").select("*").eq("project_id", project_id).order("requirement_id"),
       supabase.from("architecture_drivers").select("*").eq("project_id", project_id).order("created_at"),
       supabase.from("architecture_artifacts").select("*").eq("project_id", project_id).order("stage, created_at"),
-      supabase.from("projects").select("name, description").eq("id", project_id).single(),
+      supabase.from("projects").select("name, description, mode, source_repo_url").eq("id", project_id).single(),
     ]);
 
     const contextParts: string[] = [];
+    const projectMode = String((projectRes.data as any)?.mode ?? "greenfield").toLowerCase();
+    const isBrownfield = projectMode === "brownfield" || projectMode === "hybrid";
+    const isHybrid = projectMode === "hybrid";
 
     if (projectRes.data) {
-      contextParts.push(`PROJECT: ${projectRes.data.name}\nDescription: ${projectRes.data.description || "No description"}`);
+      contextParts.push(`PROJECT: ${projectRes.data.name}\nMode: ${projectMode}${(projectRes.data as any).source_repo_url ? `\nSource repo: ${(projectRes.data as any).source_repo_url}` : ""}\nDescription: ${projectRes.data.description || "No description"}`);
     }
+
+    // ─── Brownfield / Hybrid As-Is context (Stages 3+) ────────────────
+    if (isBrownfield && stage >= 3) {
+      const tagged = (reqRes.data || []).filter((r: any) => r.change_type);
+      const preserve = tagged.filter((r: any) => r.change_type === "preserve");
+      const deprecate = tagged.filter((r: any) => r.change_type === "deprecate");
+      const change = tagged.filter((r: any) => r.change_type === "change");
+      const bfLines: string[] = [
+        isHybrid
+          ? `HYBRID PROJECT CONTEXT — this project modernizes part of an existing system AND builds new modules alongside. Every artifact must distinguish LEGACY-side concerns from NEW-BUILD concerns, and explicitly design the BOUNDARY between them (contracts, data ownership, event flows).`
+          : `BROWNFIELD CONTEXT — this project evolves an existing system, not a greenfield build.`,
+        `Delta-tagged requirements: preserve=${preserve.length}, change=${change.length}, deprecate=${deprecate.length}.`,
+      ];
+      if (preserve.length > 0) {
+        bfLines.push(`PRESERVE (treat each as a hard architectural constraint — the target design MUST keep these behaviors/technologies intact):\n${preserve.slice(0, 20).map((r: any) => `- ${r.requirement_id ?? r.id}: ${r.title}`).join("\n")}`);
+      }
+      if (deprecate.length > 0) {
+        bfLines.push(`DEPRECATE (must be retired without breaking preserve items — surface migration/coexistence concerns):\n${deprecate.slice(0, 20).map((r: any) => `- ${r.requirement_id ?? r.id}: ${r.title}`).join("\n")}`);
+      }
+      bfLines.push(`When extracting drivers, include at least one "constraint" driver per preserve item and at least one "concern" driver covering the transition risk of each deprecate item.`);
+
+      // Stage-specific brownfield/hybrid framing so agents emit the fields the doc templates need
+      const stageDirectives: Record<number, string> = {
+        5: `Architecture Design: produce BOTH a current-state view AND a target-state view. Include a gap_analysis field enumerating deltas per view (logical/process/deployment/data), and a migration_seams field describing adapters, anti-corruption layers, and façade services between old and new.`,
+        6: `Data & API design: for every preserved contract, note the backward-compatibility guarantee. For every deprecated store/endpoint, note the data-migration path (extract → transform → dual-write → cutover).`,
+        8: `Quality/Risk: include a tech_debt_register, a rollback_strategy per proposed change wave, and a cutover_risks matrix (blast radius × blackout window × dependency ordering). Frame QA scenarios as deltas from the as-is baseline.`,
+        11: `Deployment/Transition: include a wave_plan (ordered waves with scope + exit criteria), a decommissioning_schedule (per legacy component: retire-by + prerequisites), and a parallel_run_playbook (traffic split, shadow reads, comparison harness).`,
+        14: `Documentation: every ADR must state whether it governs the legacy-modernization track, the new-build track, or the boundary. Include replacement rationale ADRs for every "replace" disposition.`,
+      };
+      if (stageDirectives[stage]) {
+        bfLines.push(`STAGE ${stage} BROWNFIELD DIRECTIVE — ${stageDirectives[stage]}`);
+      }
+
+      contextParts.push(bfLines.join("\n\n"));
+    }
+
+
 
     // ─── Lock-gate enforcement ─────────────────────────────────────
     // For all stages from Architecture Design onward (Stage >= 4), only
@@ -380,7 +420,7 @@ Requirements:
 
       // Use appropriate token limits per stage complexity
       const maxTokens = stage === 16 ? 12000 : stage >= 17 ? 8000 : stage === 6 ? 8000 : undefined;
-      const llm = createLangChainLLM(LLM_API_KEY, undefined, maxTokens);
+      const llm = createLangChainLLM(LOVABLE_API_KEY, undefined, maxTokens);
 
       const { parsed: parsedContent, toolCallingUsed } = await invokeLangChainAgent(
         llm,
@@ -397,7 +437,7 @@ Requirements:
         console.warn(`[Stage ${stage}] First attempt produced ${parsedContent?.parse_error ? "unparseable" : "text-recovered"} output — retrying with reinforced prompt`);
         
         try {
-          const retryLLM = createLangChainLLM(LLM_API_KEY, "google/gemini-2.5-flash", maxTokens);
+          const retryLLM = createLangChainLLM(LOVABLE_API_KEY, "google/gemini-2.5-flash", maxTokens);
           const reinforcedPrompt = `CRITICAL: You MUST respond by calling the "${toolSchema.name}" function with valid JSON arguments. Do NOT respond with plain text. Do NOT wrap your response in markdown code fences. Use the tool/function provided.\n\n${userPrompt}`;
           
           const { parsed: retryParsed, toolCallingUsed: retryToolUsed } = await invokeLangChainAgent(
@@ -489,7 +529,7 @@ REQUIREMENTS COUNT: ${(reqRes.data || []).length}
 
 Now critically evaluate this recommendation. Find weaknesses, blind spots, and alternative approaches.`;
 
-          const challengerLLM = createLangChainLLM(LLM_API_KEY);
+          const challengerLLM = createLangChainLLM(LOVABLE_API_KEY);
           const { parsed: chalParsed } = await invokeLangChainAgent(
             challengerLLM,
             handler.challengerSystemPrompt ?? CHALLENGER_SYSTEM_PROMPT,
@@ -531,6 +571,91 @@ Now critically evaluate this recommendation. Find weaknesses, blind spots, and a
         console.error("Failed to store artifact:", artifactError);
       }
 
+      // ─── Stage 4 materialization: write generated drivers to first-class rows ──
+      // The Stage 4 UI reads architecture_drivers directly. Earlier the agent only
+      // stored a JSON artifact, so the cockpit stayed empty even after a successful
+      // run. Keep artifact history, but also upsert the extracted drivers so every
+      // downstream stage and the visible driver buckets have real rows to load.
+      const stage4Metrics = { deleted: 0, inserted: 0 };
+      if (stage === 4) {
+        const requirementIdMap = new Map(
+          allRequirements.map((r: any) => [String(r.requirement_id ?? r.id), r.id]),
+        );
+        const normalizePriority = (value: unknown) => {
+          const p = String(value ?? "medium").toLowerCase();
+          if (p === "critical" || p === "high") return "high";
+          if (p === "low") return "low";
+          return "medium";
+        };
+        const normalizeCategory = (value: unknown) => {
+          const c = String(value ?? "quality").toLowerCase().replace(/[\s-]+/g, "_");
+          if (c.includes("constraint")) return "constraint";
+          if (c.includes("concern") || c.includes("risk")) return "concern";
+          return "quality";
+        };
+        const toDriverRows = (items: any[], fallbackCategory?: string) =>
+          items
+            .filter((item) => item && typeof item === "object" && String(item.label ?? "").trim())
+            .map((item) => {
+              const sourceIds = Array.isArray(item.source_requirements)
+                ? item.source_requirements
+                    .map((id: unknown) => requirementIdMap.get(String(id)) ?? null)
+                    .filter(Boolean)
+                : [];
+              return {
+                project_id,
+                label: String(item.label).trim(),
+                description: item.description ? String(item.description) : item.impact ? String(item.impact) : null,
+                priority: normalizePriority(item.priority),
+                category: normalizeCategory(item.category ?? fallbackCategory),
+                source_requirement_ids: sourceIds.length ? sourceIds : null,
+                created_by: user_id,
+              };
+            });
+
+        const driverRows = [
+          ...toDriverRows(Array.isArray(parsedContent.drivers) ? parsedContent.drivers : [], "quality"),
+          ...toDriverRows(Array.isArray(parsedContent.constraints) ? parsedContent.constraints : [], "constraint"),
+          ...toDriverRows(
+            Array.isArray(parsedContent.missing_drivers)
+              ? parsedContent.missing_drivers.map((d: any) => ({
+                  label: d.expected_driver,
+                  description: d.reason || d.recommendation,
+                  priority: "medium",
+                  category: "concern",
+                }))
+              : [],
+            "concern",
+          ),
+        ];
+
+        if (driverRows.length > 0) {
+          // Auto-cleanup: wipe the previous driver set so a re-run replaces
+          // (not appends). Prevents stale drivers from earlier prompt versions
+          // lingering alongside freshly extracted ones.
+          const { data: wipedRows, error: wipeError } = await supabase
+            .from("architecture_drivers")
+            .delete()
+            .eq("project_id", project_id)
+            .select("id");
+          if (wipeError) {
+            console.error("Failed to wipe existing Stage 4 drivers before re-run:", wipeError);
+          }
+          stage4Metrics.deleted = wipedRows?.length ?? 0;
+          console.log(`[Stage 4] Cleared ${stage4Metrics.deleted} previous drivers before materializing new set`);
+
+          const { data: insertedRows, error: driverInsertError } = await supabase
+            .from("architecture_drivers")
+            .insert(driverRows)
+            .select("id");
+          if (driverInsertError) console.error("Failed to materialize Stage 4 drivers:", driverInsertError);
+          stage4Metrics.inserted = insertedRows?.length ?? 0;
+          console.log(`[Stage 4] Inserted ${stage4Metrics.inserted} new drivers`);
+        } else {
+          console.warn("[Stage 4] Driver extraction completed without materializable driver rows");
+        }
+      }
+
       // ─── Store challenger artifact (if exists) ────────────────────
       if (challengerResult && !challengerResult.parse_error) {
         const { error: chalArtifactError } = await supabase.from("architecture_artifacts").insert({
@@ -553,7 +678,7 @@ Now critically evaluate this recommendation. Find weaknesses, blind spots, and a
       }
 
       // ─── Log token usage ──────────────────────────────────────────
-      // Note: actual token counts from LLM API aren't exposed yet,
+      // Note: actual token counts from Lovable AI gateway aren't exposed yet,
       // so we estimate based on prompt/response lengths as a rough proxy
       const estimatedPromptTokens = Math.ceil(userPrompt.length / 4);
       const estimatedCompletionTokens = Math.ceil(JSON.stringify(parsedContent).length / 4);
@@ -612,6 +737,7 @@ Now critically evaluate this recommendation. Find weaknesses, blind spots, and a
           framework: "langchain",
           processing_time_ms: processingTime,
           estimated_tokens: estimatedTotalTokens,
+          ...(stage === 4 ? { stage4_metrics: stage4Metrics } : {}),
         },
         completed_at: new Date().toISOString(),
       }).eq("id", agentRun.id);

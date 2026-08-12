@@ -1,0 +1,3 @@
+CREATE POLICY "Members insert system_style" ON public.system_style FOR INSERT TO authenticated WITH CHECK (public.is_project_member(auth.uid(), project_id));
+CREATE POLICY "Members update system_style" ON public.system_style FOR UPDATE TO authenticated USING (public.is_project_member(auth.uid(), project_id)) WITH CHECK (public.is_project_member(auth.uid(), project_id));
+CREATE POLICY "Members delete system_style" ON public.system_style FOR DELETE TO authenticated USING (public.is_project_member(auth.uid(), project_id));

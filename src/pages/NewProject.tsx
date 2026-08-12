@@ -20,6 +20,7 @@ import {
   Globe,
   FileCode,
   Package,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,10 +156,70 @@ const BROWNFIELD_STARTERS = [
     iconBg: "bg-violet-500/15",
     iconColor: "text-violet-600 dark:text-violet-400",
   },
+  {
+    id: "chinook-db",
+    icon: Database,
+    name: "Chinook Sample DB",
+    description:
+      "Music-store schema across 11 tables, delivered in 5 SQL dialects (Postgres, MySQL, SQLite, SQL Server, Oracle). Great for cross-dialect data-modeling reverse-engineering.",
+    tag: "SQL · small",
+    sourceRepo: "https://github.com/lerocha/chinook-database",
+    color: "from-cyan-500/15 to-cyan-500/5",
+    iconBg: "bg-cyan-500/15",
+    iconColor: "text-cyan-600 dark:text-cyan-400",
+  },
+  {
+    id: "northwind-pg",
+    icon: Database,
+    name: "Northwind (PostgreSQL)",
+    description:
+      "Microsoft's classic Northwind Traders sample — 13 tables, orders/customers/products relationships, single-file SQL. Stress test for schema reverse-engineering and gap analysis.",
+    tag: "SQL · small",
+    sourceRepo: "https://github.com/pthom/northwind_psql",
+    color: "from-teal-500/15 to-teal-500/5",
+    iconBg: "bg-teal-500/15",
+    iconColor: "text-teal-600 dark:text-teal-400",
+  },
+  {
+    id: "django-realworld",
+    icon: GitBranch,
+    name: "RealWorld Conduit (Django)",
+    description:
+      "Python/Django REST Framework counterpart to the Node RealWorld backend — settings, URL router, DRF viewsets, ORM models and serializers across articles, profiles and auth.",
+    tag: "Python repo · medium",
+    sourceRepo: "https://github.com/gothinkster/django-realworld-example-app",
+    color: "from-lime-500/15 to-lime-500/5",
+    iconBg: "bg-lime-500/15",
+    iconColor: "text-lime-600 dark:text-lime-400",
+  },
+  {
+    id: "sauna-demo-app",
+    icon: Leaf,
+    name: "Sauna controller demo",
+    description:
+      "Small Flask app (anse-proj/sauna-demo-app) — thermal simulation, JSON API, circular temperature dial. Team test bed for adding features like session timer or steamer.",
+    tag: "Python Flask · tiny",
+    sourceRepo: "https://github.com/anse-proj/sauna-demo-app",
+    color: "from-orange-500/15 to-orange-500/5",
+    iconBg: "bg-orange-500/15",
+    iconColor: "text-orange-600 dark:text-orange-400",
+  },
+  {
+    id: "eshop-microservices",
+    icon: Package,
+    name: "eShopOnContainers (.NET microservices)",
+    description:
+      "Microsoft's canonical microservices reference — Catalog, Ordering, Basket and Identity service manifests plus README. Exercises the style-classifier's microservices verdict and the 7R planner.",
+    tag: ".NET microservices · medium",
+    sourceRepo: "https://github.com/dotnet-architecture/eShopOnContainers",
+    color: "from-rose-500/15 to-rose-500/5",
+    iconBg: "bg-rose-500/15",
+    iconColor: "text-rose-600 dark:text-rose-400",
+  },
 ];
 
 type Phase = "pick-mode" | "configure";
-type Mode = "greenfield" | "brownfield";
+type Mode = "greenfield" | "brownfield" | "hybrid";
 
 export default function NewProject() {
   const navigate = useNavigate();
@@ -206,7 +267,7 @@ export default function NewProject() {
           description,
           owner_id: user.id,
           mode,
-          current_stage: mode === "brownfield" ? 0 : 1,
+          current_stage: mode === "greenfield" ? 1 : 0,
         } as any)
         .select("id")
         .single();
@@ -218,7 +279,7 @@ export default function NewProject() {
       });
 
       // Brownfield + starter selected → seed real-world files via edge function
-      if (mode === "brownfield" && selectedStarterId) {
+      if ((mode === "brownfield" || mode === "hybrid") && selectedStarterId) {
         setSeeding(true);
         const starter = BROWNFIELD_STARTERS.find((s) => s.id === selectedStarterId);
         // Persist starter info so Discovery workspace can show context (no repeat gallery)
@@ -308,7 +369,7 @@ export default function NewProject() {
               Are you starting from a blank slate, or bringing an existing system into TimeArch?
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* New project */}
               <motion.button
                 whileHover={{ y: -3 }}
@@ -382,6 +443,44 @@ export default function NewProject() {
                 </ul>
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 group-hover:gap-2.5 transition-all">
                   Set up existing project <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </motion.button>
+
+              {/* Hybrid project */}
+              <motion.button
+                whileHover={{ y: -3 }}
+                onClick={() => choose("hybrid")}
+                className="text-left p-6 rounded-2xl border-2 border-border/60 hover:border-violet-500/60 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent transition-all group"
+              >
+                <div className="h-12 w-12 rounded-xl bg-violet-500/20 flex items-center justify-center mb-4">
+                  <Layers className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="font-display text-lg font-bold">Hybrid</h2>
+                  <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-700 dark:text-violet-300">
+                    hybrid
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  Modernize part of an existing system while building brand-new modules alongside.
+                  Documents cover both tracks and the boundary between them.
+                </p>
+                <ul className="text-xs text-muted-foreground space-y-1 mb-5">
+                  <li className="flex items-center gap-2">
+                    <span className="h-1 w-1 rounded-full bg-violet-500" /> Discovery on the legacy
+                    side + greenfield design on the new side
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="h-1 w-1 rounded-full bg-violet-500" /> Explicit boundary &
+                    integration design in every doc
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="h-1 w-1 rounded-full bg-violet-500" /> Begins at Stage 0 —
+                    Discovery
+                  </li>
+                </ul>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700 dark:text-violet-300 group-hover:gap-2.5 transition-all">
+                  Set up hybrid project <ArrowRight className="h-3.5 w-3.5" />
                 </span>
               </motion.button>
             </div>
@@ -477,7 +576,7 @@ export default function NewProject() {
           </motion.div>
         )}
 
-        {phase === "configure" && mode === "brownfield" && (
+        {phase === "configure" && (mode === "brownfield" || mode === "hybrid") && (
           <motion.div
             key="brown"
             initial={{ opacity: 0, y: 8 }}

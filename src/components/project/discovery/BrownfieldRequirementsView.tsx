@@ -79,7 +79,7 @@ const ORIGIN_META: Record<string, { label: string; icon: typeof Code2; tone: str
   repo_component: {
     label: "Repo component",
     icon: Boxes,
-    tone: "text-amber-500 bg-amber-500/10 border-amber-500/30",
+    tone: "text-blue-500 bg-blue-500/10 border-blue-500/30",
   },
   other: {
     label: "Other source",

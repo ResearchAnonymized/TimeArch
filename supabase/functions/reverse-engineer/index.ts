@@ -25,12 +25,21 @@ interface ImportRow {
   status: string;
 }
 
-const PROVENANCE_META = (kind: string, sourceLabel: string) => ({
+type Confidence = "low" | "med" | "high";
+
+const PROVENANCE_META = (
+  kind: string,
+  sourceLabel: string,
+  extra: { confidence?: Confidence; extractor?: string; source_import_ids?: string[] } = {},
+) => ({
   provenance: "reverse-engineered" as const,
   needs_human_confirmation: true,
   source_kind: kind,
   source_label: sourceLabel,
   generated_at: new Date().toISOString(),
+  confidence: extra.confidence ?? "med",
+  extractor: extra.extractor ?? "heuristic",
+  source_import_ids: extra.source_import_ids ?? [],
 });
 
 function ok(body: unknown, status = 200) {
@@ -119,36 +128,101 @@ function inferLanguage(path: string): string | null {
   return map[ext] ?? null;
 }
 
+function filenameFromImport(imp: ImportRow): string {
+  if (imp.storage_path) {
+    const seg = imp.storage_path.split("/").pop() || "";
+    const dash = seg.indexOf("-");
+    if (dash > 0 && /^\d+$/.test(seg.slice(0, dash))) {
+      return seg.slice(dash + 1).replace(/__/g, "/");
+    }
+    return seg.replace(/__/g, "/");
+  }
+  return imp.source_label || "file";
+}
+
+/** Extract symbols from source in multiple languages. */
+function extractSymbols(text: string, filename: string): { exports: string[]; imports: string[] } {
+  const lower = filename.toLowerCase();
+  let exports: string[] = [];
+  let imports: string[] = [];
+
+  if (/\.py$/.test(lower)) {
+    exports = (text.match(/^\s*(?:async\s+)?def\s+(\w+)|^\s*class\s+(\w+)/gm) || [])
+      .map((s) => s.match(/(?:def|class)\s+(\w+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+    imports = (text.match(/^\s*(?:from\s+([\w.]+)\s+import|import\s+([\w.]+))/gm) || [])
+      .map((s) => s.match(/from\s+([\w.]+)|import\s+([\w.]+)/)?.[1] || s.match(/import\s+([\w.]+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+  } else if (/\.(java|kt)$/.test(lower)) {
+    exports = (text.match(/(?:public|private|protected)?\s*(?:static\s+)?(?:class|interface|enum|record)\s+(\w+)/g) || [])
+      .map((s) => s.match(/(?:class|interface|enum|record)\s+(\w+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+    imports = (text.match(/^import\s+(?:static\s+)?([\w.]+);/gm) || [])
+      .map((s) => s.match(/import\s+(?:static\s+)?([\w.]+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+  } else if (/\.cs$/.test(lower)) {
+    exports = (text.match(/(?:public|internal|private)?\s*(?:static\s+)?(?:class|interface|enum|record|struct)\s+(\w+)/g) || [])
+      .map((s) => s.match(/(?:class|interface|enum|record|struct)\s+(\w+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+    imports = (text.match(/^using\s+([\w.]+);/gm) || [])
+      .map((s) => s.match(/using\s+([\w.]+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+  } else if (/\.go$/.test(lower)) {
+    exports = (text.match(/^func\s+(?:\([^)]*\)\s+)?(\w+)/gm) || [])
+      .map((s) => s.match(/^func\s+(?:\([^)]*\)\s+)?(\w+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+    imports = (text.match(/^import\s+(?:\([\s\S]*?\)|"([^"]+)")/gm) || [])
+      .flatMap((block) => [...block.matchAll(/"([^"]+)"/g)].map((m) => m[1]))
+      .slice(0, 40);
+  } else if (/\.html?$/.test(lower)) {
+    exports = (text.match(/\bid=["']([^"']+)["']/g) || [])
+      .map((s) => s.match(/id=["']([^"']+)["']/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 20);
+  } else {
+    exports = (text.match(/^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var|interface|type|enum)\s+(\w+)/gm) || [])
+      .map((s) => s.match(/(?:function|class|const|let|var|interface|type|enum)\s+(\w+)/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+    imports = (text.match(/^\s*import\s+[^;]+from\s+["']([^"']+)["']/gm) || [])
+      .map((s) => s.match(/from\s+["']([^"']+)["']/)?.[1])
+      .filter((x): x is string => !!x)
+      .slice(0, 40);
+  }
+  return { exports, imports };
+}
+
 /** Fallback for repo imports that are single source files, not zip archives. */
 function parseRepoSingleFile(text: string, filename: string) {
   const lines = text.split(/\r?\n/);
-  const exportMatches = text.match(/^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var|interface|type|enum)\s+(\w+)/gm) || [];
-  const exports = exportMatches
-    .map((s) => {
-      const m = s.match(/(?:function|class|const|let|var|interface|type|enum)\s+(\w+)/);
-      return m?.[1];
-    })
-    .filter((x): x is string => !!x)
-    .slice(0, 30);
-  const importMatches = text.match(/^\s*import\s+[^;]+from\s+["']([^"']+)["']/gm) || [];
-  const imports = importMatches
-    .map((s) => s.match(/from\s+["']([^"']+)["']/)?.[1])
-    .filter((x): x is string => !!x)
-    .slice(0, 30);
+  const { exports, imports } = extractSymbols(text, filename);
 
   const name = filename.split("/").pop()!.replace(/\.[^.]+$/, "");
   const kind = inferComponentKind(filename);
   const lang = inferLanguage(filename);
 
+  const infra = {
+    docker: /dockerfile/i.test(filename),
+    kubernetes: false,
+    terraform: filename.endsWith(".tf"),
+    github_actions: /\.github\/workflows\//.test(filename),
+    package_json: /package\.json$/.test(filename),
+    requirements_txt: /requirements\.txt$/.test(filename),
+  };
+
   return {
     fileCount: 1,
-    topDirs: [],
+    topDirs: filename.includes("/") ? [filename.split("/")[0]] : [],
     languages: lang ? { [lang]: 1 } : {},
     components: [{ name, path: filename, kind, language: lang, exports, imports }],
-    infra: {
-      docker: false, kubernetes: false, terraform: false,
-      github_actions: false, package_json: false, requirements_txt: false,
-    },
+    infra,
     file_summary: { lines: lines.length, exports: exports.length, imports: imports.length },
   };
 }
@@ -203,12 +277,96 @@ async function parseRepoZip(bytes: Uint8Array) {
 function parseSrsRequirements(text: string) {
   const lines = text.split(/\r?\n/);
   const items: { title: string; description: string }[] = [];
-  for (const ln of lines) {
-    const m = ln.match(/^\s*(?:[-*]\s+|\d+[.)]\s+|REQ[-_]?\d+[:.\s]+)(.{8,})$/i);
-    if (m) items.push({ title: m[1].slice(0, 120), description: m[1] });
+  const seen = new Set<string>();
+
+  const add = (title: string, description: string) => {
+    const t = title.trim().slice(0, 120);
+    if (t.length < 6 || seen.has(t.toLowerCase())) return;
+    seen.add(t.toLowerCase());
+    items.push({ title: t, description: description.trim().slice(0, 2000) });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    const bullet = ln.match(/^\s*(?:[-*]\s+|\d+[.)]\s+|REQ[-_]?\d+[:.\s]+)(.{8,})$/i);
+    if (bullet) {
+      add(bullet[1], bullet[1]);
+      continue;
+    }
+    const heading = ln.match(/^#{1,3}\s+(.{6,})$/);
+    if (heading) {
+      const title = heading[1].replace(/[#*`]/g, "").trim();
+      const body: string[] = [];
+      for (let j = i + 1; j < lines.length && j < i + 8; j++) {
+        if (/^#{1,3}\s+/.test(lines[j])) break;
+        const t = lines[j].trim();
+        if (t && !/^[-|]/.test(t)) body.push(t);
+      }
+      add(title, body.join(" ") || title);
+    }
     if (items.length >= 50) break;
   }
   return items;
+}
+
+function parseManifest(text: string, filename: string) {
+  const lower = filename.toLowerCase();
+  if (/package\.json$/.test(lower)) {
+    try {
+      const pkg = JSON.parse(text);
+      return {
+        type: "npm",
+        name: pkg.name,
+        dependencies: Object.keys(pkg.dependencies || {}),
+        devDependencies: Object.keys(pkg.devDependencies || {}),
+        scripts: Object.keys(pkg.scripts || {}),
+      };
+    } catch { return null; }
+  }
+  if (/requirements\.txt$/.test(lower)) {
+    const deps = text.split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"))
+      .map((l) => l.split(/[=<>!\[]/)[0].trim());
+    return { type: "pip", dependencies: deps };
+  }
+  if (/pyproject\.toml$/.test(lower)) {
+    const deps = [...text.matchAll(/^[\w-]+(?:\s*=\s*"[^"]+"|\s*=\s*\{)/gm)].map((m) => m[0].split("=")[0].trim());
+    return { type: "python-project", hints: deps.slice(0, 30) };
+  }
+  return null;
+}
+
+async function seedManifest(
+  supabase: any, projectId: string, userId: string, imp: ImportRow, manifest: any,
+) {
+  await supabase.from("architecture_artifacts").insert({
+    project_id: projectId,
+    stage: 10,
+    type: "diagram",
+    title: `[As-Is] Dependency manifest: ${imp.source_label}`,
+    status: "draft",
+    generated_by: "Reverse-Engineering Agent",
+    created_by: userId,
+    content: {
+      _meta: PROVENANCE_META(imp.kind, imp.source_label, {
+        extractor: "manifest-parser",
+        confidence: "high",
+        source_import_ids: [imp.id],
+      }),
+      summary: `Parsed ${manifest.type} manifest from ${imp.source_label}.`,
+      manifest,
+    },
+  });
+  const deps = manifest.dependencies || manifest.devDependencies || [];
+  const reqRows = (Array.isArray(deps) ? deps : []).slice(0, 15).map((d: string) => ({
+    title: `Dependency: ${d}`,
+    description: `Third-party package ${d} declared in ${imp.source_label}.`,
+    type: "non-functional",
+    category: "Dependencies",
+    origin: { type: "manifest_dependency", name: d, manifest: manifest.type },
+  }));
+  return await insertReqs(supabase, projectId, userId, imp, reqRows);
 }
 
 // ---------- Seeders ----------
@@ -258,7 +416,7 @@ async function seedApi(supabase: any, projectId: string, userId: string, imp: Im
     generated_by: "Reverse-Engineering Agent",
     created_by: userId,
     content: {
-      _meta: PROVENANCE_META(imp.kind, imp.source_label),
+      _meta: PROVENANCE_META(imp.kind, imp.source_label, { extractor: "openapi", confidence: parsed.endpoints.length >= 3 ? "high" : parsed.endpoints.length > 0 ? "med" : "low", source_import_ids: [imp.id] }),
       summary: `Imported from ${imp.source_label}. ${parsed.endpoints.length} endpoints, ${parsed.schemas.length} schemas.`,
       api_version: parsed.version,
       endpoints: parsed.endpoints,
@@ -293,7 +451,7 @@ async function seedData(supabase: any, projectId: string, userId: string, imp: I
     generated_by: "Reverse-Engineering Agent",
     created_by: userId,
     content: {
-      _meta: PROVENANCE_META(imp.kind, imp.source_label),
+      _meta: PROVENANCE_META(imp.kind, imp.source_label, { extractor: "sql-ddl", confidence: parsed.tables.length >= 3 ? "high" : parsed.tables.length > 0 ? "med" : "low", source_import_ids: [imp.id] }),
       summary: `Imported from ${imp.source_label}. ${parsed.tables.length} tables detected.`,
       tables: parsed.tables,
     },
@@ -325,7 +483,7 @@ async function seedRepo(supabase: any, projectId: string, userId: string, imp: I
     generated_by: "Reverse-Engineering Agent",
     created_by: userId,
     content: {
-      _meta: PROVENANCE_META(imp.kind, imp.source_label),
+      _meta: PROVENANCE_META(imp.kind, imp.source_label, { extractor: "repo-scan", confidence: parsed.components.length >= 5 ? "high" : parsed.components.length >= 2 ? "med" : "low", source_import_ids: [imp.id] }),
       summary: `Imported from ${imp.source_label}. ${parsed.components.length} components inferred from ${parsed.fileCount} files.`,
       components: parsed.components,
       top_level_directories: parsed.topDirs,
@@ -342,7 +500,7 @@ async function seedRepo(supabase: any, projectId: string, userId: string, imp: I
     generated_by: "Reverse-Engineering Agent",
     created_by: userId,
     content: {
-      _meta: PROVENANCE_META(imp.kind, imp.source_label),
+      _meta: PROVENANCE_META(imp.kind, imp.source_label, { extractor: "infra-signals", confidence: Object.values(parsed.infra).filter(Boolean).length >= 2 ? "high" : "med", source_import_ids: [imp.id] }),
       summary: `Detected build/deploy signals from ${imp.source_label}.`,
       signals: parsed.infra,
     },
@@ -380,7 +538,7 @@ async function seedSrs(supabase: any, projectId: string, userId: string, imp: Im
     status: "draft",
     source: `reverse-engineered:${imp.source_label}`,
     created_by: userId,
-    acceptance_criteria: { _meta: PROVENANCE_META(imp.kind, imp.source_label) },
+    acceptance_criteria: { _meta: PROVENANCE_META(imp.kind, imp.source_label, { extractor: "srs-regex", confidence: "low", source_import_ids: [imp.id] }) },
   }));
   await supabase.from("requirements").insert(rows);
   return rows.length;
@@ -396,7 +554,7 @@ async function seedAdr(supabase: any, projectId: string, userId: string, imp: Im
     generated_by: "Reverse-Engineering Agent",
     created_by: userId,
     content: {
-      _meta: PROVENANCE_META(imp.kind, imp.source_label),
+      _meta: PROVENANCE_META(imp.kind, imp.source_label, { extractor: "adr-raw", confidence: "med", source_import_ids: [imp.id] }),
       raw_markdown: text.slice(0, 50000),
     },
   });
@@ -443,7 +601,23 @@ Deno.serve(async (req) => {
     else if (!reprocess) q = q.in("status", ["pending", "failed"]);
     const { data: imports, error: impErr } = await q;
     if (impErr) return ok({ error: impErr.message }, 200);
-    if (!imports?.length) return ok({ message: "No imports to process", processed: 0 });
+    // Nothing pending: report already-parsed count so the UI does not say "Read 0 files".
+    if (!imports?.length) {
+      const { data: existing } = await supabase
+        .from("project_imports")
+        .select("id,kind,status")
+        .eq("project_id", project_id);
+      const already = (existing || []).filter((i: any) => i.status === "parsed");
+      return ok({
+        message: "No imports to process",
+        processed: 0,
+        results: already.map((i: any) => ({
+          id: i.id,
+          kind: i.kind,
+          status: "already_parsed",
+        })),
+      });
+    }
 
     const results: any[] = [];
     for (const imp of imports as ImportRow[]) {
@@ -477,9 +651,10 @@ Deno.serve(async (req) => {
             break;
           }
           case "repo": {
+            const filePath = filenameFromImport(imp);
             const parsed = isZipBytes(dl.bytes)
               ? await parseRepoZip(dl.bytes)
-              : parseRepoSingleFile(dl.text, imp.source_label || "file");
+              : parseRepoSingleFile(dl.text, filePath);
             const reqN = await seedRepo(supabase, project_id, user.id, imp, parsed);
             summary = { components: parsed.components.length, files: parsed.fileCount, requirements: reqN };
             break;
@@ -495,8 +670,19 @@ Deno.serve(async (req) => {
             summary = { adr: 1 };
             break;
           }
-          default:
-            summary = { note: "No parser for this kind in M2; file stored only." };
+          default: {
+            const manifest = parseManifest(dl.text, filenameFromImport(imp));
+            if (manifest) {
+              const reqN = await seedManifest(supabase, project_id, user.id, imp, manifest);
+              summary = {
+                manifest: manifest.type,
+                dependencies: (manifest.dependencies || []).length,
+                requirements: reqN,
+              };
+            } else {
+              summary = { note: "No parser for this kind in M2; file stored only." };
+            }
+          }
         }
 
         await supabase.from("project_imports").update({

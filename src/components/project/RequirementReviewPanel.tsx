@@ -410,6 +410,7 @@ function ReviewDecisionCard({
   );
 }
 
+
 // ── Ambiguity Clarification Card ─────────────────────
 function ClarificationCard({
   question,
@@ -1109,6 +1110,8 @@ export default function RequirementReviewPanel({ projectId, requirements, onRefr
             </span>
           </h3>
         </div>
+
+
 
         <div className="space-y-3">
           {filtered.map((req) => (

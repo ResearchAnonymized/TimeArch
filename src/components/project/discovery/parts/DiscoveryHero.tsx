@@ -1,122 +1,71 @@
-import { Compass, Loader2, Save, Sparkles } from "lucide-react";
+import { Compass } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import type { BrownfieldMode } from "./ModeToggle";
 
 interface Props {
-  hasImports: boolean;
-  hasParsed: boolean;
-  reversing: boolean;
-  loadingDemo: string | null;
-  showOneClickDemo: boolean;
+  mode: BrownfieldMode;
   pipelinePct: number;
   pipelineLabel: string;
-  isReturning: boolean;
-  importCount: number;
-  step: 1 | 2 | 3;
-  lastActivity: Date | null;
-  onOneClickDemo: () => void;
-  onDismissReturning: () => void;
 }
 
-export default function DiscoveryHero({
-  hasImports,
-  hasParsed,
-  reversing,
-  loadingDemo,
-  showOneClickDemo,
-  pipelinePct,
-  pipelineLabel,
-  isReturning,
-  importCount,
-  step,
-  lastActivity,
-  onOneClickDemo,
-  onDismissReturning,
-}: Props) {
+export default function DiscoveryHero({ mode, pipelinePct, pipelineLabel }: Props) {
   return (
-    <>
-      {isReturning && hasImports && (
-        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-8 w-8 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-              <Save className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold">Welcome back — picking up where you left off</p>
-              <p className="text-[11px] text-muted-foreground">
-                {importCount} file{importCount === 1 ? "" : "s"} saved ·{" "}
-                {hasParsed ? `Step ${step} ready` : "Ready to run AI reading"}
-                {lastActivity && ` · last edit ${lastActivity.toLocaleString()}`}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDismissReturning}
-            className="text-xs flex-shrink-0"
-          >
-            Dismiss
-          </Button>
+    <div
+      className={
+        mode === "live"
+          ? "rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent p-5"
+          : "rounded-xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-transparent to-transparent p-5"
+      }
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={
+            mode === "live"
+              ? "h-10 w-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0"
+              : "h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0"
+          }
+        >
+          <Compass
+            className={
+              mode === "live"
+                ? "h-5 w-5 text-emerald-700 dark:text-emerald-300"
+                : "h-5 w-5 text-blue-600 dark:text-blue-400"
+            }
+          />
         </div>
-      )}
-
-      <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent p-5">
-        <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-            <Compass className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h2 className="font-display text-lg font-bold">Brownfield Discovery</h2>
-              <Badge
-                variant="outline"
-                className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-500/10"
-              >
-                existing system
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Excavate your legacy system in three guided steps. We'll read what you have, surface
-              gaps, and plan how it evolves — no need to start from scratch.
-            </p>
-          </div>
-          {showOneClickDemo && (
-            <Button
-              size="sm"
-              onClick={onOneClickDemo}
-              disabled={!!loadingDemo || reversing}
-              className="bg-amber-600 hover:bg-amber-700 text-white flex-shrink-0 shadow-sm"
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h2 className="font-display text-lg font-bold">Brownfield change</h2>
+            <Badge
+              variant="outline"
+              className={
+                mode === "live"
+                  ? "text-[10px] border-emerald-500/40 text-emerald-800 dark:text-emerald-200"
+                  : "text-[10px] border-blue-500/40 text-blue-700 dark:text-blue-300"
+              }
             >
-              {loadingDemo || reversing ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Setting up…
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" /> One-click demo
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-amber-500/20">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
-              Upload → Parse → Baseline artifacts
-            </span>
-            <span className="text-[11px] text-muted-foreground">{pipelinePct}%</span>
+              {mode === "live" ? "Live" : "Demo"}
+            </Badge>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-amber-500/15 overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
-              style={{ width: `${pipelinePct}%` }}
-            />
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Import a system → recover architecture → describe a new requirement → see what changes
+            where → hand off a clear proposal for humans and machines.
+          </p>
+          <div className="mt-3">
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className={
+                  mode === "live"
+                    ? "h-full rounded-full bg-emerald-600 transition-all duration-500"
+                    : "h-full rounded-full bg-blue-600 transition-all duration-500"
+                }
+                style={{ width: `${pipelinePct}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1.5">{pipelineLabel}</p>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1.5">{pipelineLabel}</p>
         </div>
       </div>
-    </>
+    </div>
   );
 }

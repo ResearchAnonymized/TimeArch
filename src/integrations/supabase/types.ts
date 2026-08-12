@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      adr_records: {
+        Row: {
+          alternatives_considered: Json
+          chosen_alternative_id: string | null
+          consequences: string | null
+          context: string | null
+          created_at: string
+          created_by: string
+          decision: string | null
+          evidence_refs: Json
+          feature_change_id: string | null
+          id: string
+          number: number | null
+          project_id: string
+          status: string
+          superseded_by: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alternatives_considered?: Json
+          chosen_alternative_id?: string | null
+          consequences?: string | null
+          context?: string | null
+          created_at?: string
+          created_by: string
+          decision?: string | null
+          evidence_refs?: Json
+          feature_change_id?: string | null
+          id?: string
+          number?: number | null
+          project_id: string
+          status?: string
+          superseded_by?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alternatives_considered?: Json
+          chosen_alternative_id?: string | null
+          consequences?: string | null
+          context?: string | null
+          created_at?: string
+          created_by?: string
+          decision?: string | null
+          evidence_refs?: Json
+          feature_change_id?: string | null
+          id?: string
+          number?: number | null
+          project_id?: string
+          status?: string
+          superseded_by?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adr_records_chosen_alternative_id_fkey"
+            columns: ["chosen_alternative_id"]
+            isOneToOne: false
+            referencedRelation: "architecture_alternatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adr_records_feature_change_id_fkey"
+            columns: ["feature_change_id"]
+            isOneToOne: false
+            referencedRelation: "feature_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adr_records_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adr_records_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "adr_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_blackboard: {
         Row: {
           key: string
@@ -329,6 +415,75 @@ export type Database = {
           },
         ]
       }
+      architecture_alternatives: {
+        Row: {
+          cons: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          effort: string | null
+          evidence_refs: Json
+          feature_change_id: string
+          id: string
+          name: string
+          project_id: string
+          pros: Json
+          quality_scores: Json
+          recommended: boolean
+          risk: string | null
+          updated_at: string
+        }
+        Insert: {
+          cons?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          effort?: string | null
+          evidence_refs?: Json
+          feature_change_id: string
+          id?: string
+          name: string
+          project_id: string
+          pros?: Json
+          quality_scores?: Json
+          recommended?: boolean
+          risk?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cons?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          effort?: string | null
+          evidence_refs?: Json
+          feature_change_id?: string
+          id?: string
+          name?: string
+          project_id?: string
+          pros?: Json
+          quality_scores?: Json
+          recommended?: boolean
+          risk?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "architecture_alternatives_feature_change_id_fkey"
+            columns: ["feature_change_id"]
+            isOneToOne: false
+            referencedRelation: "feature_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "architecture_alternatives_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       architecture_artifacts: {
         Row: {
           content: Json
@@ -444,6 +599,7 @@ export type Database = {
           current_state: string | null
           description: string | null
           effort: string
+          evidence_refs: Json
           framework: string
           id: string
           project_id: string
@@ -463,6 +619,7 @@ export type Database = {
           current_state?: string | null
           description?: string | null
           effort?: string
+          evidence_refs?: Json
           framework?: string
           id?: string
           project_id: string
@@ -482,6 +639,7 @@ export type Database = {
           current_state?: string | null
           description?: string | null
           effort?: string
+          evidence_refs?: Json
           framework?: string
           id?: string
           project_id?: string
@@ -651,6 +809,7 @@ export type Database = {
           detected_at: string
           entity_ref: string | null
           entity_type: string | null
+          evidence_refs: Json
           fresh_snapshot: Json | null
           id: string
           import_id: string | null
@@ -673,6 +832,7 @@ export type Database = {
           detected_at?: string
           entity_ref?: string | null
           entity_type?: string | null
+          evidence_refs?: Json
           fresh_snapshot?: Json | null
           id?: string
           import_id?: string | null
@@ -695,6 +855,7 @@ export type Database = {
           detected_at?: string
           entity_ref?: string | null
           entity_type?: string | null
+          evidence_refs?: Json
           fresh_snapshot?: Json | null
           id?: string
           import_id?: string | null
@@ -820,6 +981,463 @@ export type Database = {
         }
         Relationships: []
       }
+      experiment_proposals: {
+        Row: {
+          change_type: string
+          created_at: string
+          created_by: string
+          description: string
+          expected_hints: Json
+          id: string
+          pr_fetched_at: string | null
+          pr_files: Json
+          pr_merged_at: string | null
+          pr_number: number | null
+          pr_repo: string | null
+          pr_source: string
+          pr_title: string | null
+          pr_url: string | null
+          project_id: string
+          source: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          change_type?: string
+          created_at?: string
+          created_by: string
+          description?: string
+          expected_hints?: Json
+          id?: string
+          pr_fetched_at?: string | null
+          pr_files?: Json
+          pr_merged_at?: string | null
+          pr_number?: number | null
+          pr_repo?: string | null
+          pr_source?: string
+          pr_title?: string | null
+          pr_url?: string | null
+          project_id: string
+          source?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          change_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          expected_hints?: Json
+          id?: string
+          pr_fetched_at?: string | null
+          pr_files?: Json
+          pr_merged_at?: string | null
+          pr_number?: number | null
+          pr_repo?: string | null
+          pr_source?: string
+          pr_title?: string | null
+          pr_url?: string | null
+          project_id?: string
+          source?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiment_rubric_scores: {
+        Row: {
+          comment: string
+          created_at: string
+          dimension: string
+          id: string
+          rater_user_id: string
+          run_id: string
+          score: number
+        }
+        Insert: {
+          comment?: string
+          created_at?: string
+          dimension: string
+          id?: string
+          rater_user_id: string
+          run_id: string
+          score: number
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          dimension?: string
+          id?: string
+          rater_user_id?: string
+          run_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_rubric_scores_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "experiment_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiment_runs: {
+        Row: {
+          created_at: string
+          feature_change_id: string | null
+          finished_at: string | null
+          guardrail_events: Json
+          id: string
+          project_id: string
+          proposal_id: string | null
+          started_at: string
+          status: string
+          summary: Json
+          tokens_in: number
+          tokens_out: number
+          track: string
+          triggered_by: string
+          updated_at: string
+          wall_ms: number
+        }
+        Insert: {
+          created_at?: string
+          feature_change_id?: string | null
+          finished_at?: string | null
+          guardrail_events?: Json
+          id?: string
+          project_id: string
+          proposal_id?: string | null
+          started_at?: string
+          status?: string
+          summary?: Json
+          tokens_in?: number
+          tokens_out?: number
+          track?: string
+          triggered_by: string
+          updated_at?: string
+          wall_ms?: number
+        }
+        Update: {
+          created_at?: string
+          feature_change_id?: string | null
+          finished_at?: string | null
+          guardrail_events?: Json
+          id?: string
+          project_id?: string
+          proposal_id?: string | null
+          started_at?: string
+          status?: string
+          summary?: Json
+          tokens_in?: number
+          tokens_out?: number
+          track?: string
+          triggered_by?: string
+          updated_at?: string
+          wall_ms?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_runs_feature_change_id_fkey"
+            columns: ["feature_change_id"]
+            isOneToOne: false
+            referencedRelation: "feature_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experiment_runs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experiment_runs_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "experiment_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiment_stage_results: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          metrics: Json
+          raw: Json
+          row_count: number
+          run_id: string
+          stage_key: string
+          stage_order: number
+          status: string
+          wall_ms: number
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          metrics?: Json
+          raw?: Json
+          row_count?: number
+          run_id: string
+          stage_key: string
+          stage_order: number
+          status?: string
+          wall_ms?: number
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          metrics?: Json
+          raw?: Json
+          row_count?: number
+          run_id?: string
+          stage_key?: string
+          stage_order?: number
+          status?: string
+          wall_ms?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_stage_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "experiment_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_changes: {
+        Row: {
+          change_type: string
+          created_at: string
+          created_by: string | null
+          current_behavior: string | null
+          description: string | null
+          desired_behavior: string | null
+          id: string
+          is_active: boolean
+          merit_breakdown: Json | null
+          merit_justification: string | null
+          merit_score: number | null
+          merit_scored_at: string | null
+          priority: string
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          change_type?: string
+          created_at?: string
+          created_by?: string | null
+          current_behavior?: string | null
+          description?: string | null
+          desired_behavior?: string | null
+          id?: string
+          is_active?: boolean
+          merit_breakdown?: Json | null
+          merit_justification?: string | null
+          merit_score?: number | null
+          merit_scored_at?: string | null
+          priority?: string
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          change_type?: string
+          created_at?: string
+          created_by?: string | null
+          current_behavior?: string | null
+          description?: string | null
+          desired_behavior?: string | null
+          id?: string
+          is_active?: boolean
+          merit_breakdown?: Json | null
+          merit_justification?: string | null
+          merit_score?: number | null
+          merit_scored_at?: string | null
+          priority?: string
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_changes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_mappings: {
+        Row: {
+          confidence: number
+          created_at: string
+          created_by: string | null
+          element_label: string | null
+          element_ref: string
+          element_type: string
+          evidence_refs: Json
+          feature_change_id: string
+          id: string
+          project_id: string
+          rationale: string | null
+          relationship: string
+          review_status: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          element_label?: string | null
+          element_ref: string
+          element_type: string
+          evidence_refs?: Json
+          feature_change_id: string
+          id?: string
+          project_id: string
+          rationale?: string | null
+          relationship?: string
+          review_status?: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          element_label?: string | null
+          element_ref?: string
+          element_type?: string
+          evidence_refs?: Json
+          feature_change_id?: string
+          id?: string
+          project_id?: string
+          rationale?: string | null
+          relationship?: string
+          review_status?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_mappings_feature_change_id_fkey"
+            columns: ["feature_change_id"]
+            isOneToOne: false
+            referencedRelation: "feature_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_mappings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_work_items: {
+        Row: {
+          adr_id: string | null
+          category: string
+          created_at: string
+          created_by: string
+          dependencies: Json
+          description: string | null
+          effort: string | null
+          evidence_refs: Json
+          feature_change_id: string
+          id: string
+          ordering: number
+          priority: string
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+          validation_criteria: Json
+        }
+        Insert: {
+          adr_id?: string | null
+          category?: string
+          created_at?: string
+          created_by: string
+          dependencies?: Json
+          description?: string | null
+          effort?: string | null
+          evidence_refs?: Json
+          feature_change_id: string
+          id?: string
+          ordering?: number
+          priority?: string
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          validation_criteria?: Json
+        }
+        Update: {
+          adr_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          dependencies?: Json
+          description?: string | null
+          effort?: string | null
+          evidence_refs?: Json
+          feature_change_id?: string
+          id?: string
+          ordering?: number
+          priority?: string
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          validation_criteria?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_work_items_adr_id_fkey"
+            columns: ["adr_id"]
+            isOneToOne: false
+            referencedRelation: "adr_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_work_items_feature_change_id_fkey"
+            columns: ["feature_change_id"]
+            isOneToOne: false
+            referencedRelation: "feature_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_work_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           category: string
@@ -854,6 +1472,85 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "feedback_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      impact_findings: {
+        Row: {
+          classification: string
+          created_at: string
+          dependency_path: Json
+          evidence_refs: Json
+          feature_change_id: string
+          id: string
+          impacted_element_label: string | null
+          impacted_element_ref: string
+          impacted_element_type: string
+          origin_mapping_id: string | null
+          project_id: string
+          reason: string | null
+          recommended_action: string | null
+          review_status: string
+          severity: string
+          updated_at: string
+        }
+        Insert: {
+          classification?: string
+          created_at?: string
+          dependency_path?: Json
+          evidence_refs?: Json
+          feature_change_id: string
+          id?: string
+          impacted_element_label?: string | null
+          impacted_element_ref: string
+          impacted_element_type: string
+          origin_mapping_id?: string | null
+          project_id: string
+          reason?: string | null
+          recommended_action?: string | null
+          review_status?: string
+          severity?: string
+          updated_at?: string
+        }
+        Update: {
+          classification?: string
+          created_at?: string
+          dependency_path?: Json
+          evidence_refs?: Json
+          feature_change_id?: string
+          id?: string
+          impacted_element_label?: string | null
+          impacted_element_ref?: string
+          impacted_element_type?: string
+          origin_mapping_id?: string | null
+          project_id?: string
+          reason?: string | null
+          recommended_action?: string | null
+          review_status?: string
+          severity?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impact_findings_feature_change_id_fkey"
+            columns: ["feature_change_id"]
+            isOneToOne: false
+            referencedRelation: "feature_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_findings_origin_mapping_id_fkey"
+            columns: ["origin_mapping_id"]
+            isOneToOne: false
+            referencedRelation: "feature_mappings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_findings_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -948,6 +1645,56 @@ export type Database = {
         }
         Relationships: []
       }
+      modernization_items: {
+        Row: {
+          action: string
+          computed_at: string
+          computed_by: string | null
+          effort: number
+          evidence_refs: Json
+          id: string
+          impact: number
+          name: string
+          project_id: string
+          rationale: string | null
+          roi: number
+        }
+        Insert: {
+          action: string
+          computed_at?: string
+          computed_by?: string | null
+          effort: number
+          evidence_refs?: Json
+          id?: string
+          impact: number
+          name: string
+          project_id: string
+          rationale?: string | null
+          roi: number
+        }
+        Update: {
+          action?: string
+          computed_at?: string
+          computed_by?: string | null
+          effort?: number
+          evidence_refs?: Json
+          id?: string
+          impact?: number
+          name?: string
+          project_id?: string
+          rationale?: string | null
+          roi?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modernization_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -1016,6 +1763,7 @@ export type Database = {
           display_name: string | null
           id: string
           join_reason: string | null
+          ui_mode: Database["public"]["Enums"]["ui_mode"] | null
           updated_at: string
           user_id: string
         }
@@ -1027,6 +1775,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           join_reason?: string | null
+          ui_mode?: Database["public"]["Enums"]["ui_mode"] | null
           updated_at?: string
           user_id: string
         }
@@ -1038,6 +1787,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           join_reason?: string | null
+          ui_mode?: Database["public"]["Enums"]["ui_mode"] | null
           updated_at?: string
           user_id?: string
         }
@@ -1194,6 +1944,107 @@ export type Database = {
         }
         Relationships: []
       }
+      quality_impact_assessments: {
+        Row: {
+          attribute: string
+          created_at: string
+          created_by: string
+          direction: string
+          evidence_refs: Json
+          feature_change_id: string
+          id: string
+          mitigations: Json
+          project_id: string
+          rationale: string | null
+          severity: string
+          updated_at: string
+        }
+        Insert: {
+          attribute: string
+          created_at?: string
+          created_by: string
+          direction?: string
+          evidence_refs?: Json
+          feature_change_id: string
+          id?: string
+          mitigations?: Json
+          project_id: string
+          rationale?: string | null
+          severity?: string
+          updated_at?: string
+        }
+        Update: {
+          attribute?: string
+          created_at?: string
+          created_by?: string
+          direction?: string
+          evidence_refs?: Json
+          feature_change_id?: string
+          id?: string
+          mitigations?: Json
+          project_id?: string
+          rationale?: string | null
+          severity?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_impact_assessments_feature_change_id_fkey"
+            columns: ["feature_change_id"]
+            isOneToOne: false
+            referencedRelation: "feature_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_impact_assessments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quality_scores: {
+        Row: {
+          characteristic: string
+          computed_at: string
+          computed_by: string | null
+          gap_count: number
+          id: string
+          project_id: string
+          rationale: string | null
+          score: number
+        }
+        Insert: {
+          characteristic: string
+          computed_at?: string
+          computed_by?: string | null
+          gap_count?: number
+          id?: string
+          project_id: string
+          rationale?: string | null
+          score: number
+        }
+        Update: {
+          characteristic?: string
+          computed_at?: string
+          computed_by?: string | null
+          gap_count?: number
+          id?: string
+          project_id?: string
+          rationale?: string | null
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_scores_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requirement_reviews: {
         Row: {
           acknowledged_at: string | null
@@ -1258,6 +2109,7 @@ export type Database = {
         Row: {
           acceptance_criteria: Json | null
           category: string | null
+          change_type: string | null
           created_at: string
           created_by: string
           description: string | null
@@ -1272,11 +2124,13 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["requirement_type"]
           updated_at: string
+          urgency: string | null
           version: number
         }
         Insert: {
           acceptance_criteria?: Json | null
           category?: string | null
+          change_type?: string | null
           created_at?: string
           created_by: string
           description?: string | null
@@ -1291,11 +2145,13 @@ export type Database = {
           title: string
           type?: Database["public"]["Enums"]["requirement_type"]
           updated_at?: string
+          urgency?: string | null
           version?: number
         }
         Update: {
           acceptance_criteria?: Json | null
           category?: string | null
+          change_type?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
@@ -1310,6 +2166,7 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["requirement_type"]
           updated_at?: string
+          urgency?: string | null
           version?: number
         }
         Relationships: [
@@ -1455,6 +2312,7 @@ export type Database = {
           created_by: string | null
           dimension_scores: Json
           effort_estimate: Json
+          evidence_refs: Json
           id: string
           inputs_hash: string | null
           overall_verdict: string
@@ -1470,6 +2328,7 @@ export type Database = {
           created_by?: string | null
           dimension_scores?: Json
           effort_estimate?: Json
+          evidence_refs?: Json
           id?: string
           inputs_hash?: string | null
           overall_verdict: string
@@ -1485,6 +2344,7 @@ export type Database = {
           created_by?: string | null
           dimension_scores?: Json
           effort_estimate?: Json
+          evidence_refs?: Json
           id?: string
           inputs_hash?: string | null
           overall_verdict?: string
@@ -1498,6 +2358,50 @@ export type Database = {
             foreignKeyName: "system_disposition_reports_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_style: {
+        Row: {
+          computed_at: string
+          computed_by: string | null
+          confidence: string
+          drivers_fit: Json
+          evidence: Json
+          id: string
+          primary_style: string
+          project_id: string
+          secondary_style: string | null
+        }
+        Insert: {
+          computed_at?: string
+          computed_by?: string | null
+          confidence: string
+          drivers_fit?: Json
+          evidence?: Json
+          id?: string
+          primary_style: string
+          project_id: string
+          secondary_style?: string | null
+        }
+        Update: {
+          computed_at?: string
+          computed_by?: string | null
+          confidence?: string
+          drivers_fit?: Json
+          evidence?: Json
+          id?: string
+          primary_style?: string
+          project_id?: string
+          secondary_style?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_style_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -1835,6 +2739,7 @@ export type Database = {
         | "constraint"
         | "assumption"
         | "dependency"
+      ui_mode: "classic" | "studio"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1997,6 +2902,7 @@ export const Constants = {
         "assumption",
         "dependency",
       ],
+      ui_mode: ["classic", "studio"],
     },
   },
 } as const

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  ArrowRightLeft,
   Check,
   CheckCircle2,
   Edit3,
@@ -9,10 +10,12 @@ import {
   Link,
   Lock,
   Shield,
+  Sparkles,
   Target,
   Trash2,
   Unlock,
   Users,
+  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,21 +32,64 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PRIORITY_STYLES, TYPE_COLORS } from "../constants";
-import type { SavedRequirement } from "../types";
+import type { RequirementChangeType, SavedRequirement } from "../types";
+
+const CHANGE_TYPE_META: Record<
+  RequirementChangeType,
+  { label: string; icon: any; badge: string; dot: string }
+> = {
+  preserve: {
+    label: "Preserve",
+    icon: Shield,
+    badge: "bg-slate-500/15 text-slate-600 border-slate-500/30 dark:text-slate-300",
+    dot: "bg-slate-500",
+  },
+  change: {
+    label: "Change",
+    icon: ArrowRightLeft,
+    badge: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300",
+    dot: "bg-amber-500",
+  },
+  deprecate: {
+    label: "Deprecate",
+    icon: XCircle,
+    badge: "bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-300",
+    dot: "bg-rose-500",
+  },
+  new: {
+    label: "New",
+    icon: Sparkles,
+    badge: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+  },
+};
+
+const CHANGE_TYPES: RequirementChangeType[] = ["preserve", "change", "deprecate", "new"];
 
 export function SavedRequirementsList({
   requirements,
   onRefresh,
+  projectMode,
 }: {
   requirements: SavedRequirement[];
   onRefresh: () => void;
+  projectMode?: string | null;
 }) {
   const { user } = useAuth();
   const [filter, setFilter] = useState("all");
+  const [deltaFilter, setDeltaFilter] = useState<"all" | RequirementChangeType>("all");
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
 
-  const filtered = filter === "all" ? requirements : requirements.filter((r) => r.type === filter);
+  const isBrownfield = projectMode === "brownfield";
+
+
+  const typeFiltered =
+    filter === "all" ? requirements : requirements.filter((r) => r.type === filter);
+  const filtered =
+    isBrownfield && deltaFilter !== "all"
+      ? typeFiltered.filter((r) => (r.change_type ?? "new") === deltaFilter)
+      : typeFiltered;
 
   const typeGroups: { key: string; label: string; count: number; icon: any; color: string }[] = [
     { key: "all", label: "All", count: requirements.length, icon: LayoutGrid, color: "text-foreground" },
@@ -55,6 +101,9 @@ export function SavedRequirementsList({
     { key: "user_story", label: "Stories", count: requirements.filter((r) => r.type === "user_story").length, icon: Users, color: "text-violet-500" },
   ];
 
+  const deltaCount = (k: RequirementChangeType) =>
+    requirements.filter((r) => (r.change_type ?? "new") === k).length;
+
   const startEdit = (req: SavedRequirement) => {
     setEditing(req.id);
     setEditForm({
@@ -62,6 +111,7 @@ export function SavedRequirementsList({
       description: req.description || "",
       priority: req.priority,
       type: req.type,
+      change_type: req.change_type ?? (isBrownfield ? "new" : "new"),
     });
   };
 
@@ -73,7 +123,8 @@ export function SavedRequirementsList({
         description: editForm.description || null,
         priority: editForm.priority as any,
         type: editForm.type as any,
-      })
+        change_type: editForm.change_type ?? null,
+      } as any)
       .eq("id", reqId);
     if (error) {
       toast.error(error.message);
@@ -83,6 +134,19 @@ export function SavedRequirementsList({
     setEditing(null);
     onRefresh();
   };
+
+  const setChangeType = async (reqId: string, next: RequirementChangeType) => {
+    const { error } = await supabase
+      .from("requirements")
+      .update({ change_type: next } as any)
+      .eq("id", reqId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    onRefresh();
+  };
+
 
   const lockRequirement = async (reqId: string) => {
     if (!user) return;
@@ -160,6 +224,43 @@ export function SavedRequirementsList({
           })}
       </div>
 
+      {isBrownfield && (
+        <div className="flex items-center gap-2 mb-5 flex-wrap">
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mr-1">
+            Delta
+          </span>
+          <button
+            onClick={() => setDeltaFilter("all")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+              deltaFilter === "all"
+                ? "bg-foreground text-background"
+                : "bg-secondary/70 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            All
+            <span className="text-[9px] opacity-70">{requirements.length}</span>
+          </button>
+          {CHANGE_TYPES.map((k) => {
+            const m = CHANGE_TYPE_META[k];
+            const Icon = m.icon;
+            const active = deltaFilter === k;
+            return (
+              <button
+                key={k}
+                onClick={() => setDeltaFilter(k)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-all ${
+                  active ? m.badge : "border-transparent bg-secondary/70 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3 w-3" />
+                {m.label}
+                <span className="text-[9px] opacity-70">{deltaCount(k)}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="space-y-3">
         {filtered.map((req) => {
           const tc = TYPE_COLORS[req.type] || TYPE_COLORS.functional;
@@ -214,6 +315,28 @@ export function SavedRequirementsList({
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     className="text-xs min-h-[60px]"
                   />
+                  {isBrownfield && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+                        Delta
+                      </span>
+                      <Select
+                        value={editForm.change_type ?? "new"}
+                        onValueChange={(v) => setEditForm({ ...editForm, change_type: v })}
+                      >
+                        <SelectTrigger className="h-8 text-xs w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CHANGE_TYPES.map((k) => (
+                            <SelectItem key={k} value={k}>
+                              {CHANGE_TYPE_META[k].label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -262,6 +385,17 @@ export function SavedRequirementsList({
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
+                      {isBrownfield && (() => {
+                        const key = (req.change_type ?? "new") as RequirementChangeType;
+                        const m = CHANGE_TYPE_META[key];
+                        const Icon = m.icon;
+                        return (
+                          <Badge className={`text-[9px] border gap-0.5 ${m.badge}`}>
+                            <Icon className="h-2.5 w-2.5" />
+                            {m.label}
+                          </Badge>
+                        );
+                      })()}
                       <Badge
                         className={`text-[9px] border ${PRIORITY_STYLES[req.priority] || PRIORITY_STYLES.medium}`}
                       >

@@ -77,6 +77,83 @@ function generateErDiagram(entities: any[], relationships: any[]): string {
   return lines.join("\n");
 }
 
+/**
+ * Adapter: convert reverse-engineered `tables[]` (schema-style) into the
+ * `entities[]`/`relationships[]` shape this workspace expects.
+ */
+function adaptTablesToEntities(tables: any[]): { entities: any[]; relationships: any[] } {
+  const entities: any[] = [];
+  const relationships: any[] = [];
+  const tableNames = new Set(
+    tables.map((x) => (x && typeof x.name === "string" ? x.name : "")).filter(Boolean),
+  );
+  for (const t of tables) {
+    if (!t || typeof t !== "object" || typeof t.name !== "string") continue;
+    const cols = Array.isArray(t.columns) ? t.columns : [];
+    const attributes = cols
+      .map((c: any) => {
+        if (typeof c === "string") {
+          const isPk = c.toLowerCase() === `${t.name.toLowerCase()}_id` || c.toLowerCase() === "id";
+          return {
+            name: c,
+            type: /_id$|^id$/i.test(c) ? "uuid" : "string",
+            nullable: false,
+            description: isPk ? "PK" : "",
+          };
+        }
+        if (!c || typeof c.name !== "string") return null;
+        const desc: string[] = [];
+        if (c.primary_key) desc.push("PK");
+        const fk = c.foreign_key ?? c.references;
+        const fkTable = typeof fk === "string" ? fk : fk?.table;
+        if (fkTable) desc.push(`FK → ${fkTable}`);
+        if (typeof c.description === "string" && c.description) desc.push(c.description);
+        return {
+          name: c.name,
+          type: typeof c.type === "string" ? c.type : "string",
+          nullable: !!c.nullable,
+          description: desc.join(" · "),
+        };
+      })
+      .filter(Boolean);
+    entities.push({
+      name: t.name,
+      description:
+        typeof t.description === "string" && t.description
+          ? t.description
+          : `Imported from source schema (${attributes.length} columns).`,
+      attributes,
+      owner_component: typeof t.owner_component === "string" ? t.owner_component : "",
+      aggregate_root: !!t.aggregate_root,
+    });
+    for (const c of cols) {
+      const colName = typeof c === "string" ? c : c?.name;
+      const fk = typeof c === "string" ? null : (c?.foreign_key ?? c?.references);
+      let toTable: string | null = null;
+      if (fk) {
+        toTable = typeof fk === "string" ? fk : fk?.table;
+      } else if (typeof colName === "string" && /_id$/i.test(colName)) {
+        const base = colName.replace(/_id$/i, "");
+        if (base && base.toLowerCase() !== t.name.toLowerCase()) {
+          if (tableNames.has(base)) toTable = base;
+          else if (tableNames.has(`${base}s`)) toTable = `${base}s`;
+        }
+      }
+      if (typeof toTable === "string" && toTable) {
+        relationships.push({
+          from: t.name,
+          to: toTable,
+          type: "many-to-one",
+          description: `${colName} → ${toTable}`,
+        });
+      }
+    }
+  }
+  return { entities, relationships };
+}
+
+
+
 function EntityCard({ entity, index }: { entity: any; index: number }) {
   const [open, setOpen] = useState(false);
   return (
@@ -233,8 +310,18 @@ export default function DataArchitectureWorkspace({
   let content = artifact.content;
   if (content?.parse_error) content = recoverArtifactContent(content) || content;
 
-  const entities = content.entities || [];
-  const relationships = content.relationships || [];
+  const rawEntities = content.entities || [];
+  const rawRelationships = content.relationships || [];
+  const rawTables = content.tables;
+  // Adapter: reverse-engineered artifacts store schema-style `tables[]`
+  // instead of `entities[]`/`relationships[]`. Map them so the UI renders.
+  let entities = rawEntities;
+  let relationships = rawRelationships;
+  if (entities.length === 0 && Array.isArray(rawTables)) {
+    const adapted = adaptTablesToEntities(rawTables);
+    entities = adapted.entities;
+    if (relationships.length === 0) relationships = adapted.relationships;
+  }
   const rawAggregates = content.aggregates || [];
   // Filter out empty/malformed aggregates and fall back to deriving from entities
   let aggregates = rawAggregates.filter(

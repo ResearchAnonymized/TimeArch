@@ -31,6 +31,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import ArtifactVersionHistory from "./ArtifactVersionHistory";
 
 interface Props {
   projectId: string;
@@ -243,6 +244,14 @@ export default function QualityAttributesWorkspace({
   return (
     <div className="space-y-6">
       <StageIntro {...STAGE_INTROS[11]} title="Quality Attributes" />
+      <div className="flex justify-end">
+        <ArtifactVersionHistory
+          projectId={projectId}
+          stage={11}
+          titleFilter={(t) => !t?.startsWith("Evaluator Review:")}
+          onRestored={() => window.location.reload()}
+        />
+      </div>
       {/* Overall Score Banner */}
       <div
         className={`rounded-xl border-2 p-5 flex items-center gap-4 ${overallColors[overallScore] || "bg-card"}`}

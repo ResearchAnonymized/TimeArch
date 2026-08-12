@@ -23,7 +23,7 @@ const VERDICT_META: Record<string, { label: string; tone: string; tip: string }>
     tip: "Lift-and-shift to better infrastructure. No code change." },
   replatform: { label: "Replatform", tone: "bg-blue-500/15 text-blue-600 border-blue-500/30",
     tip: "Minor changes to take advantage of a new platform." },
-  refactor: { label: "Refactor", tone: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  refactor: { label: "Refactor", tone: "bg-blue-500/15 text-blue-600 border-blue-500/30",
     tip: "Restructure code without behavior change to improve maintainability." },
   rearchitect: { label: "Re-architect", tone: "bg-orange-500/15 text-orange-600 border-orange-500/30",
     tip: "Materially change the architecture (e.g. monolith → services)." },

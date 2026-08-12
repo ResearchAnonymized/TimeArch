@@ -7,7 +7,7 @@ tokens** issued in-app at `/integrations`.
 | Surface | Best for | Endpoint |
 | --- | --- | --- |
 | **REST API** | CI pipelines, scripts, dashboards, custom UIs | `POST /functions/v1/public-api` |
-| **MCP server** | IDE assistants (Cursor, Claude Desktop, etc.) | `POST /functions/v1/mcp-server` |
+| **MCP server** | IDE assistants (Cursor, Claude Desktop, Lovable) | `POST /functions/v1/mcp-server` |
 | **CLI / SDK**  | Local automation, ad-hoc terminal use | `sdk/cli.mjs`, `sdk/timearch.ts` |
 | **Webhooks**   | Push events into Jira, Slack, GitHub, n8n | Configured per-project |
 

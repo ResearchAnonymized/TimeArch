@@ -12,7 +12,7 @@ Design and Evolution* (ECSA 2026 Industry Track)
 
 | Layer            | Path                                                  | Purpose                                                   |
 | ---------------- | ----------------------------------------------------- | --------------------------------------------------------- |
-| Source snapshot  | `src/`, `supabase/functions/`, `supabase/migrations/` | Full TimeArch app (React + Vite + Supabase).         |
+| Source snapshot  | `src/`, `supabase/functions/`, `supabase/migrations/` | Full TimeArch app (React + Vite + Lovable Cloud).         |
 | Demo inputs      | `public/demo/brownfield/`                             | ShopFlow SRS, two ADRs, OpenAPI, MySQL schema.            |
 | Locked LLM trace | `reproducibility/llm-cassette.json`                   | Prompt-hash → response, played back in `LLM_MODE=replay`. |
 | Reproduction     | `scripts/reproduce.sh`, `scripts/smoke-test.sh`       | One-shot scripts; outputs land in `reproducibility/_out/`.|
@@ -52,7 +52,7 @@ All outputs land in `reproducibility/_out/`.
 ### Auto-bootstrap (maintainer convenience)
 
 If the cassette or `reproducibility/baseline/` is empty **and**
-`LLM_API_KEY` is set, `scripts/reproduce.sh` automatically runs once
+`LOVABLE_API_KEY` is set, `scripts/reproduce.sh` automatically runs once
 in `record` mode to populate both, then promotes the run as the new
 baseline. Pass `--bootstrap` to force a re-record, or `--no-bootstrap` to
 disable. Reviewers without an API key never trigger this path — they get
@@ -84,7 +84,7 @@ pure `replay` behavior with a clear error if any prompt is uncovered.
 ## 7. Limitations & honest caveats
 
 - **Live mode** (re-running agents against a real LLM) requires
-  `LLM_API_KEY` and incurs cost. Replay mode is the default and the
+  `LOVABLE_API_KEY` and incurs cost. Replay mode is the default and the
   only mode the AE reviewer is expected to use.
 - The cassette captures the **prompts the maintainer ran**. If a code
   change alters a prompt, replay will throw a clear miss error — this is
@@ -92,7 +92,7 @@ pure `replay` behavior with a clear error if any prompt is uncovered.
   `reproducibility/README.md`.
 - Stage 14–18 outputs depend on stage 1–13 being completed; the
   brownfield demo seeds the prerequisite state automatically.
-- The Supabase backend is reachable read-only with the publishable
+- The Lovable Cloud backend is reachable read-only with the publishable
   anon key shipped in `.env.example`. Reviewers do **not** need backend
   write access — replay mode runs the agents locally.
 

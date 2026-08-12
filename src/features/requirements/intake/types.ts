@@ -86,6 +86,8 @@ export interface ExtractedData {
   raw_output?: string;
 }
 
+export type RequirementChangeType = "preserve" | "change" | "deprecate" | "new";
+
 export interface SavedRequirement {
   id: string;
   requirement_id: string;
@@ -98,6 +100,7 @@ export interface SavedRequirement {
   source: string | null;
   acceptance_criteria: any;
   locked_at: string | null;
+  change_type: RequirementChangeType | null;
 }
 
 export type PersistableRequirementType =

@@ -12,12 +12,8 @@ echo "[smoke] 1/5  Node + bun versions"
 node -v
 bun --version || echo "(bun optional)"
 
-echo "[smoke] 2/5  Installing dependencies"
-if command -v bun >/dev/null 2>&1; then
-  bun install --frozen-lockfile
-else
-  npm install --legacy-peer-deps
-fi
+echo "[smoke] 2/5  Installing dependencies (offline-friendly)"
+if command -v bun >/dev/null 2>&1; then bun install --frozen-lockfile; else npm ci; fi
 
 echo "[smoke] 3/5  Verifying reproducibility assets"
 test -f reproducibility/llm-cassette.json          || { echo "  ! missing llm-cassette.json"; exit 1; }

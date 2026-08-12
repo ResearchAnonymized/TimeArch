@@ -1,170 +1,194 @@
 /**
- * Brownfield Discovery workspace — orchestrator only.
- *
- * Pulls data + actions from `@/features/discovery/hooks` and dispatches to
- * three presentational step components. All Supabase calls live in
- * `discoveryService`; this file stays UI-only.
+ * Brownfield Discovery — end-to-end:
+ *   Import → Recover → Change
+ * Change work: Current features | Propose changes | Review package
  */
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useDiscoveryImports,
   useDiscoveryStep,
   useRemotePresets,
-  useReturningUser,
-  useSeededPreset,
 } from "@/features/discovery/hooks";
-import { discoveryService } from "@/services/discoveryService";
-import { errorOf } from "@/lib/result";
-import { createLogger } from "@/lib/logger";
+import { useSystemInventory } from "@/features/discovery/useSystemInventory";
 import DiscoveryToolbar from "./parts/DiscoveryToolbar";
-import DiscoveryHero from "./parts/DiscoveryHero";
-import StepRail from "./parts/StepRail";
+import type { BrownfieldMode } from "./parts/ModeToggle";
+import StepRail, { type ChangeTab } from "./parts/StepRail";
 import Step1Upload from "./parts/Step1Upload";
 import Step2Reverse from "./parts/Step2Reverse";
-import Step3Findings from "./parts/Step3Findings";
-
-const log = createLogger("DiscoveryWorkspace");
+import SimpleChangeFlow from "./SimpleChangeFlow";
+import SystemInventoryPanel from "./SystemInventoryPanel";
 
 interface Props {
   projectId: string;
   onJumpToStage?: (stage: number) => void;
+  step?: 1 | 2 | 3;
+  onStepChange?: (n: 1 | 2 | 3) => void;
+  onProgress?: (p: { hasImports: boolean; hasParsed: boolean }) => void;
+  hideInlineStepRail?: boolean;
 }
 
-export default function DiscoveryWorkspace({ projectId, onJumpToStage }: Props) {
+const MODE_KEY = (projectId: string) => `timearch.brownfield.mode.${projectId}`;
+const STEP3_TAB_KEY = (projectId: string) => `timearch.brownfield.step3.${projectId}`;
+
+type Step3Tab = ChangeTab;
+
+function readMode(projectId: string): BrownfieldMode {
+  try {
+    const v = window.localStorage.getItem(MODE_KEY(projectId));
+    if (v === "live" || v === "demo") return v;
+  } catch {
+    /* ignore */
+  }
+  return "demo";
+}
+
+function readStep3Tab(projectId: string): Step3Tab {
+  try {
+    const v = window.localStorage.getItem(STEP3_TAB_KEY(projectId));
+    if (v === "propose" || v === "recovered" || v === "revision") return v;
+  } catch {
+    /* ignore */
+  }
+  return "recovered";
+}
+
+export default function DiscoveryWorkspace({
+  projectId,
+  step: controlledStep,
+  onStepChange,
+  onProgress,
+  hideInlineStepRail,
+}: Props) {
   const { user } = useAuth();
-  const { step, setStep } = useDiscoveryStep(projectId);
-  const seededPreset = useSeededPreset(projectId);
+  const internalStep = useDiscoveryStep(projectId);
+  const step = controlledStep ?? internalStep.step;
+  const setStep = onStepChange ?? internalStep.setStep;
   const remotePresets = useRemotePresets();
-  const [jumping, setJumping] = useState<11 | 16 | 18 | null>(null);
+  const [mode, setMode] = useState<BrownfieldMode>(() => readMode(projectId));
+  const [step3Tab, setStep3Tab] = useState<Step3Tab>(() => readStep3Tab(projectId));
+  const didInitialRoute = useRef(false);
+
+  const inventoryState = useSystemInventory(projectId, true);
 
   const data = useDiscoveryImports({
     projectId,
     userId: user?.id,
-    onParsed: useCallback(() => setStep(3), [setStep]),
+    onParsed: useCallback(() => {
+      setStep(3);
+      setStep3Tab("recovered");
+      void inventoryState.reload();
+    }, [setStep, inventoryState.reload]),
     onAllUploaded: useCallback(() => {
-      // After files land, advance to Step 2 if still on Step 1.
       if (step === 1) setStep(2);
     }, [step, setStep]),
   });
 
-  const { isReturning, dismissReturning } = useReturningUser(
-    projectId,
-    data.loading,
-    data.imports.length,
-  );
-
-  // Auto-advance step based on data state
   useEffect(() => {
-    if (data.loading) return;
-    if (data.hasParsed && step === 1) setStep(3);
-    else if (data.hasImports && step === 1 && !data.hasParsed) setStep(2);
+    if (data.hasParsed) void inventoryState.reload();
+  }, [data.hasParsed, data.parsedCount, inventoryState.reload]);
+
+  useEffect(() => {
+    onProgress?.({ hasImports: data.hasImports, hasParsed: data.hasParsed });
+  }, [data.hasImports, data.hasParsed, onProgress]);
+
+  useEffect(() => {
+    if (data.loading || didInitialRoute.current) return;
+    didInitialRoute.current = true;
+    if (data.hasParsed && step < 3) setStep(3);
+    else if (data.hasImports && !data.hasParsed && step === 1) setStep(2);
   }, [data.loading, data.hasParsed, data.hasImports, step, setStep]);
 
-  const handleJump = async (stage: 11 | 16 | 18) => {
-    setJumping(stage);
+  const handleModeChange = (next: BrownfieldMode) => {
+    setMode(next);
     try {
-      if (stage === 11) {
-        const gaps = await discoveryService.analyzeGaps({ project_id: projectId });
-        if (!gaps.ok) log.warn("gap-analyzer failed", errorOf(gaps));
-      } else if (stage === 18) {
-        toast.info("Running Drift Detection…");
-        const drift = await discoveryService.detectDrift({ project_id: projectId });
-        if (!drift.ok) log.warn("drift-detect failed", errorOf(drift));
-      }
-      onJumpToStage?.(stage);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed";
-      toast.error(msg);
-      onJumpToStage?.(stage);
-    } finally {
-      setJumping(null);
+      window.localStorage.setItem(MODE_KEY(projectId), next);
+    } catch {
+      /* ignore */
     }
   };
 
-  const handleRestart = () => {
-    if (
-      !confirm(
-        "Start over from Step 1? Your uploaded files stay — only the wizard position resets.",
-      )
-    )
-      return;
-    setStep(1);
-    dismissReturning();
+  const handleStep3Tab = (tab: Step3Tab) => {
+    setStep3Tab(tab);
+    try {
+      window.localStorage.setItem(STEP3_TAB_KEY(projectId), tab);
+    } catch {
+      /* ignore */
+    }
   };
 
-  // Overall pipeline progress: 0 = empty, 33 = files in, 66 = parsed, 100 = jumped/explored
-  const pipelinePct = data.hasParsed
-    ? step === 3
-      ? 100
-      : 75
-    : data.hasImports
-      ? data.reversing
-        ? 50
-        : 33
-      : 0;
-  const pipelineLabel = !data.hasImports
-    ? "Step 1 — bring in files"
-    : !data.hasParsed
-      ? data.reversing
-        ? "AI is reading your files…"
-        : "Files in. Run AI reading next."
-      : step === 3
-        ? "Baseline artifacts generated — explore findings"
-        : "AI finished. Step 3 unlocked.";
+  const handleSelectStep = (n: 1 | 2 | 3) => {
+    setStep(n);
+  };
+
+  const handleRestart = () => {
+    if (!confirm("Start over from Import? Uploaded files stay.")) return;
+    setStep(1);
+  };
+
+  const persist = () => {
+    try {
+      window.localStorage.setItem(`timearch.discovery.step.${projectId}`, String(step));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const findingsSummary = data.hasParsed
+    ? `Reverse-engineered baseline: ${data.findings.components} components, ${data.findings.endpoints} endpoints, ${data.findings.tables} tables, ${data.findings.requirements} requirements.`
+    : undefined;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <DiscoveryToolbar
         step={step}
         hasImports={data.hasImports}
-        lastActivity={data.lastActivity}
         onRestart={handleRestart}
-        onPersist={() => {
-          try {
-            window.localStorage.setItem(`timearch.discovery.step.${projectId}`, String(step));
-          } catch {
-            /* ignore */
-          }
-        }}
+        onPersist={persist}
+        compact={hideInlineStepRail}
+        mode={mode}
+        onModeChange={handleModeChange}
+        modeDisabled={data.reversing || data.uploading}
       />
 
-      <DiscoveryHero
-        hasImports={data.hasImports}
-        hasParsed={data.hasParsed}
-        reversing={data.reversing}
-        loadingDemo={data.loadingDemo}
-        showOneClickDemo={!data.hasImports && !seededPreset}
-        pipelinePct={pipelinePct}
-        pipelineLabel={pipelineLabel}
-        isReturning={isReturning}
-        importCount={data.imports.length}
-        step={step}
-        lastActivity={data.lastActivity}
-        onOneClickDemo={() => data.loadDemoPack(true)}
-        onDismissReturning={dismissReturning}
-      />
+      {/* Pipeline strip only when left rail is NOT owning navigation */}
+      {!hideInlineStepRail && (
+        <StepRail
+          step={step}
+          hasImports={data.hasImports}
+          hasParsed={data.hasParsed}
+          onSelect={handleSelectStep}
+          changeTab={data.hasParsed ? step3Tab : undefined}
+          onChangeTab={data.hasParsed ? handleStep3Tab : undefined}
+        />
+      )}
 
-      <StepRail
-        step={step}
-        hasImports={data.hasImports}
-        hasParsed={data.hasParsed}
-        onSelect={setStep}
-      />
+      {/* Change sub-tabs when left rail owns Import/Recover/Change */}
+      {hideInlineStepRail && step === 3 && data.hasParsed && (
+        <StepRail
+          step={step}
+          hasImports={data.hasImports}
+          hasParsed={data.hasParsed}
+          onSelect={handleSelectStep}
+          changeTab={step3Tab}
+          onChangeTab={handleStep3Tab}
+          hidePipeline
+        />
+      )}
 
       {step === 1 && (
         <Step1Upload
+          mode={mode}
           imports={data.imports}
           uploading={data.uploading}
           reversing={data.reversing}
           loadingDemo={data.loadingDemo}
           hasImports={data.hasImports}
-          seededPreset={seededPreset}
           remotePresets={remotePresets}
           onFiles={data.handleFiles}
           onLoadDemoPack={() => data.loadDemoPack(true)}
           onLoadRemotePreset={(p) => data.loadRemotePreset(p, true)}
+          onLoadGithubRepo={(url, ref) => data.loadGithubRepo(url, ref, true)}
           onDelete={data.deleteImport}
           onNext={() => setStep(2)}
         />
@@ -173,25 +197,55 @@ export default function DiscoveryWorkspace({ projectId, onJumpToStage }: Props) 
       {step === 2 && (
         <Step2Reverse
           importCount={data.imports.length}
+          pendingCount={data.pendingCount}
           reversing={data.reversing}
           hasImports={data.hasImports}
           hasParsed={data.hasParsed}
           onRun={(reprocess) => data.runReverseEngineer(reprocess)}
           onBack={() => setStep(1)}
-          onNext={() => setStep(3)}
+          onNext={() => {
+            setStep(3);
+            handleStep3Tab("recovered");
+          }}
         />
       )}
 
       {step === 3 && (
-        <Step3Findings
-          parsedCount={data.parsedCount}
-          hasParsed={data.hasParsed}
-          findings={data.findings}
-          jumping={jumping}
-          onJump={handleJump}
-          onBack={() => setStep(1)}
-          onGoStep2={() => setStep(2)}
-        />
+        <div className="space-y-4">
+          {!data.hasParsed ? (
+            <div className="rounded-xl border px-4 py-3 text-sm text-muted-foreground">
+              Recover architecture first, then come back here.
+              <button
+                type="button"
+                className="ml-2 underline text-foreground"
+                onClick={() => setStep(2)}
+              >
+                Go to recover
+              </button>
+            </div>
+          ) : (
+            <>
+              {step3Tab === "recovered" && (
+                <SystemInventoryPanel
+                  inventory={inventoryState.inventory}
+                  loading={inventoryState.loading}
+                  embedded={hideInlineStepRail}
+                />
+              )}
+
+              {(step3Tab === "propose" || step3Tab === "revision") && (
+                <SimpleChangeFlow
+                  projectId={projectId}
+                  findingsSummary={findingsSummary}
+                  inventory={inventoryState.inventory}
+                  view={step3Tab}
+                  onOpenRevision={() => handleStep3Tab("revision")}
+                  onOpenPropose={() => handleStep3Tab("propose")}
+                />
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );

@@ -3,6 +3,14 @@
     "note": "Placeholder cassette. Refresh with `LLM_MODE=record bash scripts/reproduce.sh` against the live gateway. Keys are sha256(model + JSON(messages) + json-flag).",
     "recorded_at": null,
     "model_default": "google/gemini-2.5-flash",
-    "format_version": 1
+    "format_version": 1,
+    "agents_covered": [
+      "reverse-engineer",
+      "gap-analyzer",
+      "drift-detect",
+      "modernization-planner",
+      "qa-assessor",
+      "style-classifier"
+    ]
   }
 }

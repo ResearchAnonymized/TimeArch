@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUiMode } from "@/contexts/UiModeContext";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ProjectCard from "@/components/dashboard/ProjectCard";
@@ -42,6 +43,10 @@ import {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, signOut, profile } = useAuth();
+  const { mode, loading: modeLoading } = useUiMode();
+  useEffect(() => {
+    if (!modeLoading && mode === "studio") navigate("/studio/dashboard", { replace: true });
+  }, [mode, modeLoading, navigate]);
   const [search, setSearch] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);

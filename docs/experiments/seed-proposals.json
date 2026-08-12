@@ -1,0 +1,71 @@
+{
+  "$schema": "TimeArch experiment seed corpus v1",
+  "description": "Canonical proposals used to benchmark the brownfield discovery loop. Each proposal carries ground-truth hints for retrospective metric computation.",
+  "proposals": [
+    {
+      "title": "Search owners by phone number",
+      "description": "Allow support staff to look up an owner record by phone number from the owners list view. Must match partial numbers and be case/space-insensitive.",
+      "change_type": "add",
+      "expected_hints": {
+        "components": ["OwnerController", "OwnerRepository", "OwnerRestController"],
+        "files": ["src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java"],
+        "qualities": [
+          { "attribute": "performance", "direction": "negative" },
+          { "attribute": "usability", "direction": "positive" }
+        ]
+      }
+    },
+    {
+      "title": "Soft-delete pets instead of hard delete",
+      "description": "Replace hard delete of pet rows with a soft-delete flag so historical visit records remain intact for reporting.",
+      "change_type": "modify",
+      "expected_hints": {
+        "components": ["PetController", "PetRepository", "Pet"],
+        "files": ["src/main/java/org/springframework/samples/petclinic/owner/Pet.java"],
+        "qualities": [
+          { "attribute": "maintainability", "direction": "positive" },
+          { "attribute": "data_integrity", "direction": "positive" }
+        ]
+      }
+    },
+    {
+      "title": "Bulk-import visits from CSV",
+      "description": "Add an admin endpoint that accepts a CSV file of visits and creates them in a single transaction with per-row validation errors returned to the caller.",
+      "change_type": "add",
+      "expected_hints": {
+        "components": ["VisitController", "VisitRepository"],
+        "files": ["src/main/java/org/springframework/samples/petclinic/owner/VisitController.java"],
+        "qualities": [
+          { "attribute": "performance", "direction": "positive" },
+          { "attribute": "reliability", "direction": "negative" }
+        ]
+      }
+    },
+    {
+      "title": "Migrate vets list from server-render to JSON API",
+      "description": "Expose /api/vets returning JSON and replace the Thymeleaf vets page with a client-side rendered table backed by the new endpoint.",
+      "change_type": "migrate",
+      "expected_hints": {
+        "components": ["VetController", "VetRepository", "Vet"],
+        "files": ["src/main/java/org/springframework/samples/petclinic/vet/VetController.java"],
+        "qualities": [
+          { "attribute": "performance", "direction": "positive" },
+          { "attribute": "modifiability", "direction": "positive" },
+          { "attribute": "seo", "direction": "negative" }
+        ]
+      }
+    },
+    {
+      "title": "Remove /oups error-demo endpoint",
+      "description": "Drop the CrashController demo endpoint and any wiring/tests that reference it before shipping to production.",
+      "change_type": "remove",
+      "expected_hints": {
+        "components": ["CrashController"],
+        "files": ["src/main/java/org/springframework/samples/petclinic/system/CrashController.java"],
+        "qualities": [
+          { "attribute": "security", "direction": "positive" }
+        ]
+      }
+    }
+  ]
+}
