@@ -1,30 +1,11 @@
 # TimeArch KERKIS — Mermaid figures
 
-**Drawn figures (PNG):** [figures gallery](./figures.html) · folder [`figures/`](./figures/)
-
-Import Mermaid into [draw.io](https://app.diagrams.net/) via **Arrange → Insert → Advanced → Mermaid**.  
+Import these into [draw.io](https://app.diagrams.net/) via **Arrange → Insert → Advanced → Mermaid**.  
 Full narrative: [KERKIS-TimeArch-Meta-Composition.md](./KERKIS-TimeArch-Meta-Composition.md) · Prompt: [KERKIS-CHATGPT-PROMPT.md](./KERKIS-CHATGPT-PROMPT.md)
 
 ---
 
-## Drawn figure index
-
-| # | Figure | PNG |
-|---|--------|-----|
-| 1 | KERKIS lenses | ![fig01](./figures/fig01-kerkis-lenses.jpg) |
-| 2 | Four constructs | ![fig02](./figures/fig02-four-constructs.jpg) |
-| 3 | Actor kinds | ![fig03](./figures/fig03-actors.jpg) |
-| 4 | AG Step detail | ![fig04](./figures/fig04-ag-step-detail.jpg) |
-| 5 | Linear SOP | ![fig05](./figures/fig05-linear-sop.jpg) |
-| 6 | Routing & feedback | ![fig06](./figures/fig06-routing-feedback.jpg) |
-| 7 | **FINAL Meta-composition** | ![fig07](./figures/fig07-meta-composition.jpg) |
-| 8 | Nested orchestrator | ![fig08](./figures/fig08-nested-orchestrator.jpg) |
-
----
-
 ## Figure 1 — KERKIS lenses for TimeArch
-
-![Figure 1](./figures/fig01-kerkis-lenses.jpg)
 
 ```mermaid
 flowchart TB
@@ -49,8 +30,6 @@ flowchart TB
 
 ## Figure 2 — Four constructs, one execution model
 
-![Figure 2](./figures/fig02-four-constructs.jpg)
-
 ```mermaid
 flowchart LR
   IA[IA_change_intent] --> ST[AG Step<br/>map / analyze]
@@ -64,8 +43,6 @@ flowchart LR
 ---
 
 ## Figure 3 — Actor kinds in TimeArch
-
-![Figure 3](./figures/fig03-actors.jpg)
 
 ```mermaid
 flowchart LR
@@ -90,8 +67,6 @@ flowchart LR
 
 ## Figure 4 — AG Step detail: map_feature_to_architecture
 
-![Figure 4](./figures/fig04-ag-step-detail.jpg)
-
 ```mermaid
 flowchart TB
   Role[Role: Brownfield mapper]
@@ -110,8 +85,6 @@ flowchart TB
 ---
 
 ## Figure 5 — Linear SOP (brownfield)
-
-![Figure 5](./figures/fig05-linear-sop.jpg)
 
 ```mermaid
 flowchart LR
@@ -137,8 +110,6 @@ flowchart LR
 
 ## Figure 6 — Routing and feedback
 
-![Figure 6](./figures/fig06-routing-feedback.jpg)
-
 ```mermaid
 flowchart LR
   AG[AG_analyze] --> D[OA_draft_handoff]
@@ -153,8 +124,6 @@ flowchart LR
 ---
 
 ## Figure 7 — FINAL Meta-composition
-
-![Figure 7](./figures/fig07-meta-composition.jpg)
 
 ### Outside
 
@@ -200,8 +169,6 @@ flowchart TB
 ---
 
 ## Figure 8 — Nested MC_change_analysis (orchestrator pattern)
-
-![Figure 8](./figures/fig08-nested-orchestrator.jpg)
 
 ```mermaid
 flowchart TB

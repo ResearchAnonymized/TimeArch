@@ -211,7 +211,6 @@ Treat Re-analyze as one Step from the milestone SOP’s perspective:
 
 ## See also
 
-- [**Drawn figures gallery**](./figures.html)
 - [ChatGPT + draw.io prompt](./KERKIS-CHATGPT-PROMPT.md)
 - [Mermaid figures](./KERKIS-figures.md)
 - [Brownfield Discovery](../wiki/Brownfield-Discovery.md)

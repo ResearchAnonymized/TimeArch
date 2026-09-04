@@ -81,7 +81,6 @@ Details: [Brownfield Discovery](./Brownfield-Discovery.md)
 
 Model TimeArch with Actor · Artifact · Step · Process and wrap it as one meta-composed Step:
 
-- [**Drawn figures gallery**](../modeling/figures.html) — PNG/JPG workshop slides
 - [TimeArch Meta-Composition](../modeling/KERKIS-TimeArch-Meta-Composition.md)
 - [Mermaid figures](../modeling/KERKIS-figures.md)
 - [ChatGPT + draw.io prompt](../modeling/KERKIS-CHATGPT-PROMPT.md)
