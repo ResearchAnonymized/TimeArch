@@ -14,6 +14,7 @@ Use this wiki for:
 
 - **Running the app** and understanding the two UI modes (Classic vs Studio)
 - **Brownfield discovery** — import an existing system, recover its architecture, and produce a change package
+- **Process modeling** — clear diagrams of who works, what knowledge moves, and the wrapped process partners see
 - **Multi-team integration** — how Requirements Engineering, TimeArch, and Coding tools connect through an Orchestrator
 
 ---
@@ -24,9 +25,10 @@ Use this wiki for:
 |-----------------|------|
 | Run TimeArch locally and sign in | [Getting Started](./Getting-Started.md) |
 | Work with an existing codebase (brownfield) | [Brownfield Discovery](./Brownfield-Discovery.md) |
+| See process figures with clear names | [Modeling gallery](../modeling/gallery.html) |
 | Hand off to a coding agent or CI pipeline | [Software Delivery Package (SDP)](./Software-Delivery-Package.md) |
 | Plan integration with RE and Coding teams | [Software Factory Integration](./Software-Factory-Integration.md) |
-| Present diagrams in a meeting | [Diagrams (interactive)](./diagrams.html) |
+| Present factory diagrams in a meeting | [Diagrams (interactive)](./diagrams.html) |
 
 ---
 
@@ -63,6 +65,26 @@ Details: [Brownfield Discovery](./Brownfield-Discovery.md)
 
 ---
 
+## Process modeling (clear names)
+
+Prefer these titles over cryptic codes:
+
+| Clear name | Meaning |
+|------------|---------|
+| **TimeArch Brownfield Discovery** | The whole product as one wrapped process partners see |
+| **System sources** | Code, docs, GitHub inputs |
+| **Requested change** | What to add or modify |
+| **Change Proposal / Build Plan / Agent Pack** | Stakeholder, engineer, and machine outputs |
+
+| Page | Purpose |
+|------|---------|
+| [Modeling README](../modeling/README.md) | Index |
+| [**Figure gallery**](../modeling/gallery.html) | Drawn slides |
+| [Glossary](../modeling/GLOSSARY.md) | Clear name ↔ technical ID |
+| [Wrapped process model](../modeling/META-COMPOSITION.md) | Full narrative |
+
+---
+
 ## Wiki pages
 
 | Page | Audience | Purpose |
@@ -77,15 +99,6 @@ Details: [Brownfield Discovery](./Brownfield-Discovery.md)
 
 ---
 
-## KERKIS / ANSE modeling
-
-Model TimeArch with Actor · Artifact · Step · Process and wrap it as one meta-composed Step:
-
-- [**Drawn figures gallery**](../modeling/figures.html) — PNG/JPG workshop slides
-- [TimeArch Meta-Composition](../modeling/KERKIS-TimeArch-Meta-Composition.md)
-- [Mermaid figures](../modeling/KERKIS-figures.md)
-- [ChatGPT + draw.io prompt](../modeling/KERKIS-CHATGPT-PROMPT.md)
-
 ## Related repo docs
 
 - [Architecture & code conventions](../ARCHITECTURE.md)
@@ -95,4 +108,4 @@ Model TimeArch with Actor · Artifact · Step · Process and wrap it as one meta
 
 ---
 
-*Last updated: August 2026*
+*Last updated: September 2026*
