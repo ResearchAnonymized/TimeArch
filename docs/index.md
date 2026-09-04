@@ -52,13 +52,15 @@ Treat each team tool as a specialist **worker**. Put a thin **Orchestrator** in 
 
 | Page | Description |
 |------|-------------|
+| [**ANSE (interactive)**](./wiki/anse.html) | Artifact-driven lifecycle · KERKIS · QA/Deploy next |
+| [ANSE (overview)](./wiki/ANSE.html) | Short summary + link to interactive architecture |
 | [Getting Started](./wiki/Getting-Started.html) | Install, sign in, Classic vs Studio |
 | [Brownfield Discovery](./wiki/Brownfield-Discovery.html) | Import → Recover → Change workflow |
 | [Software Factory Integration](./wiki/Software-Factory-Integration.html) | RE → TimeArch → Coding |
 | [Software Delivery Package (SDP)](./wiki/Software-Delivery-Package.html) | Handoff format for coding agents |
 | [**Diagrams (interactive)**](./wiki/diagrams.html) | Mermaid charts — best for presentations |
 | [Diagrams (markdown)](./wiki/Diagrams.html) | Same diagrams as editable markdown |
-| [Team Decisions Log](./wiki/Team-Decisions-Log.html) | Integration decisions to lock |
+| [Team Decisions Log](./wiki/Team-Decisions-Log.html) | Meeting decisions |
 | [Wiki index](./wiki/Home.html) | Full table of contents |
 
 ---
