@@ -10,6 +10,8 @@ ANSE is an AI-native software engineering toolchain for autonomous development a
 
 **[Open the interactive ANSE architecture →](./anse.html)**
 
+**KERKIS-style figures:** [gallery (ANSE section)](../modeling/gallery.html#anse) · [catalog](../modeling/figures/anse/README.md) · [PDF](../modeling/exports/TimeArch-ANSE-KERKIS-Process-Figures.pdf)
+
 That page is the primary visualization (HTML/CSS — editable, not a static diagram image). It covers:
 
 1. Connected lifecycle — RE → Architecture → Coding → QA → Deployment → Runtime  
