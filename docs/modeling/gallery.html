@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeArch — Brownfield process figures</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --fg: #1a2332;
+      --muted: #5c6b7a;
+      --card: #fff;
+      --line: #d9d2c5;
+      --accent: #1e3a5f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(247, 244, 239, 0.96);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header a { color: var(--accent); text-decoration: none; }
+    header h1 { margin: 0.35rem 0 0; font-size: 1.4rem; color: var(--accent); }
+    header p { margin: 0.4rem 0 0; color: var(--muted); max-width: 52rem; }
+    nav {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      padding: 1rem 1.5rem; border-bottom: 1px solid var(--line);
+    }
+    nav a {
+      text-decoration: none; color: var(--fg);
+      border: 1px solid var(--line); border-radius: 999px;
+      padding: 0.35rem 0.75rem; font-size: 0.85rem; background: var(--card);
+    }
+    nav a:hover { border-color: var(--accent); }
+    main { max-width: 1080px; margin: 0 auto; padding: 1.5rem; }
+    .howto {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+    }
+    .howto h2 { margin: 0 0 0.5rem; font-size: 1.05rem; color: var(--accent); }
+    .howto ul { margin: 0; padding-left: 1.2rem; color: var(--muted); }
+    section {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 12px; padding: 1.25rem; margin: 0 0 1.5rem;
+    }
+    section h2 { margin: 0 0 0.35rem; font-size: 1.2rem; color: var(--accent); }
+    .purpose { margin: 0 0 0.75rem; color: var(--muted); }
+    .meta {
+      display: grid; gap: 0.35rem;
+      font-size: 0.9rem; margin: 0 0 1rem;
+      padding: 0.75rem 1rem; background: #f3eee6; border-radius: 8px;
+    }
+    .meta strong { color: var(--accent); }
+    .notice { margin: 0 0 1rem; padding-left: 1.1rem; color: var(--fg); }
+    figure { margin: 0; }
+    figure img {
+      width: 100%; height: auto; border-radius: 8px;
+      border: 1px solid var(--line); background: #fff;
+    }
+    footer {
+      max-width: 1080px; margin: 0 auto;
+      padding: 1rem 1.5rem 2rem; color: var(--muted); font-size: 0.85rem;
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="./README.md">← Modeling docs</a>
+    <h1>TimeArch Brownfield — process figures</h1>
+    <p>
+      Clear English names on every diagram. Technical IDs (IA_/OA_/MC_) are optional
+      and defined in the <a href="./GLOSSARY.md">glossary</a>.
+    </p>
+  </header>
+
+  <nav>
+    <a href="#f01">01 Wrapped process</a>
+    <a href="#f02">02 Step by step</a>
+    <a href="#f03">03 Who works</a>
+    <a href="#f04">04 Review loop</a>
+    <a href="#f05">05 AI step</a>
+    <a href="#f06">06 Nested analysis</a>
+  </nav>
+
+  <main>
+    <div class="howto">
+      <h2>How to read these figures</h2>
+      <ul>
+        <li><strong>Navy</strong> = automated step (code or AI)</li>
+        <li><strong>Tan</strong> = knowledge package (artifact)</li>
+        <li><strong>Grey-blue</strong> = human decision</li>
+        <li><strong>Dashed tan</strong> = prompt context (role, task, rules, references)</li>
+      </ul>
+    </div>
+
+    <section id="f01">
+      <h2>01 — TimeArch Brownfield Discovery (wrapped process)</h2>
+      <p class="purpose">The main picture: what partners see outside, and the steps inside.</p>
+      <div class="meta">
+        <div><strong>Clear name:</strong> TimeArch Brownfield Discovery</div>
+        <div><strong>Technical ID:</strong> MC_timearch_brownfield (avoid saying only “Meta-composition”)</div>
+        <div><strong>Inputs:</strong> System sources · Requested change</div>
+        <div><strong>Outputs:</strong> Change Proposal · Build Plan · Agent Pack JSON · Case status</div>
+      </div>
+      <ul class="notice">
+        <li>Outside = one process step</li>
+        <li>Inside = Import → Recover → Analyze → Human review → Package → Release</li>
+      </ul>
+      <figure>
+        <img src="./figures/01-timearch-brownfield-wrapped-process.jpg" alt="TimeArch Brownfield Discovery wrapped process" />
+      </figure>
+    </section>
+
+    <section id="f02">
+      <h2>02 — Brownfield path — step by step</h2>
+      <p class="purpose">Full journey as a linear knowledge pipeline.</p>
+      <div class="meta">
+        <div><strong>Clear name:</strong> Brownfield path</div>
+        <div><strong>Ends with:</strong> Released / Closed case status</div>
+      </div>
+      <ul class="notice">
+        <li>Each step consumes the previous package</li>
+        <li>Humans approve decisions, tests, and release</li>
+      </ul>
+      <figure>
+        <img src="./figures/02-brownfield-step-by-step.jpg" alt="Brownfield step by step path" />
+      </figure>
+    </section>
+
+    <section id="f03">
+      <h2>03 — Who does the work</h2>
+      <p class="purpose">Code workers, AI workers, and human workers.</p>
+      <div class="meta">
+        <div><strong>Code (FN):</strong> Import, recover parsers, build Agent Pack</div>
+        <div><strong>AI (AG):</strong> Map, blast-radius, critic</div>
+        <div><strong>Human (HU):</strong> Go/No-go, release gates</div>
+      </div>
+      <figure>
+        <img src="./figures/03-who-does-the-work.jpg" alt="Who does the work in TimeArch" />
+      </figure>
+    </section>
+
+    <section id="f04">
+      <h2>04 — Human review and rework loop</h2>
+      <p class="purpose">How Go / No-go routes work without a hard-coded flowchart.</p>
+      <div class="meta">
+        <div><strong>Go:</strong> enters Build Plan and Agent Pack</div>
+        <div><strong>No-go:</strong> feedback re-runs Analyze (bounded retries)</div>
+        <div><strong>Safety:</strong> agents stop unless may_implement is true</div>
+      </div>
+      <figure>
+        <img src="./figures/04-human-review-and-rework.jpg" alt="Human review and rework loop" />
+      </figure>
+    </section>
+
+    <section id="f05">
+      <h2>05 — One AI step in detail</h2>
+      <p class="purpose">Map change to architecture — role, task, rules, references → mapping.</p>
+      <div class="meta">
+        <div><strong>Clear name:</strong> Map change to architecture</div>
+        <div><strong>Input:</strong> Requested change (+ System inventory as references)</div>
+        <div><strong>Output:</strong> Feature–architecture mapping (with parents)</div>
+      </div>
+      <figure>
+        <img src="./figures/05-one-ai-step-in-detail.jpg" alt="One AI step in detail" />
+      </figure>
+    </section>
+
+    <section id="f06">
+      <h2>06 — Nested change analysis</h2>
+      <p class="purpose">One wrapped step outside; coordinator + specialists inside.</p>
+      <div class="meta">
+        <div><strong>Clear name:</strong> Change analysis</div>
+        <div><strong>Technical ID:</strong> MC_change_analysis</div>
+        <div><strong>Outside output:</strong> Draft handoff</div>
+      </div>
+      <figure>
+        <img src="./figures/06-nested-change-analysis.jpg" alt="Nested change analysis" />
+      </figure>
+    </section>
+  </main>
+
+  <footer>
+    <a href="./README.md">Modeling README</a> ·
+    <a href="./GLOSSARY.md">Glossary</a> ·
+    <a href="./META-COMPOSITION.md">Wrapped process model</a> ·
+    <a href="https://github.com/ResearchAnonymized/TimeArch/tree/main/docs/modeling">GitHub folder</a>
+  </footer>
+</body>
+</html>
