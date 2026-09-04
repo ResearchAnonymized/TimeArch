@@ -77,14 +77,21 @@
 <body>
   <header>
     <a href="./README.md">← Modeling docs</a>
-    <h1>TimeArch process figures</h1>
+    <h1>TimeArch &amp; ANSE process figures</h1>
     <p>
-      Brownfield and Greenfield wrapped processes with clear English names.
-      Technical IDs are optional — see the <a href="./GLOSSARY.md">glossary</a>.
+      Brownfield, Greenfield, and ANSE+KERKIS workshop slides with clear English names.
+      Interactive ANSE architecture: <a href="../wiki/anse.html">wiki/anse.html</a>.
     </p>
   </header>
 
   <nav>
+    <a href="#anse">ANSE + KERKIS</a>
+    <a href="#a01">a-01 Lifecycle</a>
+    <a href="#a02">a-02 Artifacts</a>
+    <a href="#a03">a-03 RE→Tests</a>
+    <a href="#a04">a-04 QA/Deploy</a>
+    <a href="#a05">a-05 KERKIS</a>
+    <a href="#a06">a-06 Feedback</a>
     <a href="#brownfield">Brownfield</a>
     <a href="#f01">01 Wrapped</a>
     <a href="#f02">02 Steps</a>
@@ -102,6 +109,46 @@
   </nav>
 
   <main>
+    <div class="howto" id="anse">
+      <h2>ANSE + KERKIS — overall toolchain</h2>
+      <ul>
+        <li>Same visual language as TimeArch modeling slides</li>
+        <li>Existing: RE · Architecture (TimeArch) · Coding · Planned: QA · Deployment · Runtime: Production</li>
+        <li>Catalog: <a href="./figures/anse/README.md">figures/anse/README.md</a> · Interactive: <a href="../wiki/anse.html">anse.html</a> · PDF: <a href="./exports/TimeArch-ANSE-KERKIS-Process-Figures.pdf">export PDF</a></li>
+      </ul>
+    </div>
+
+    <section id="a01">
+      <h2>anse-01 — ANSE lifecycle and KERKIS</h2>
+      <p class="purpose">Connected lifecycle with shared artifacts and KERKIS underneath.</p>
+      <figure><img src="./figures/anse/anse-01-lifecycle-and-kerkis.jpg" alt="ANSE lifecycle and KERKIS" /></figure>
+    </section>
+    <section id="a02">
+      <h2>anse-02 — Artifact-driven engineering</h2>
+      <p class="purpose">Agent → artifact → agent; per-stage knowledge packages.</p>
+      <figure><img src="./figures/anse/anse-02-artifact-driven.jpg" alt="Artifact-driven engineering" /></figure>
+    </section>
+    <section id="a03">
+      <h2>anse-03 — Requirements → testing</h2>
+      <p class="purpose">Early test cases from requirements, standards, and domain knowledge.</p>
+      <figure><img src="./figures/anse/anse-03-re-to-testing.jpg" alt="RE to testing" /></figure>
+    </section>
+    <section id="a04">
+      <h2>anse-04 — QA and Deployment (next)</h2>
+      <p class="purpose">Planned lifecycle-wide verification and path to a running system.</p>
+      <figure><img src="./figures/anse/anse-04-qa-and-deployment.jpg" alt="QA and Deployment" /></figure>
+    </section>
+    <section id="a05">
+      <h2>anse-05 — KERKIS backbone</h2>
+      <p class="purpose">Orchestration and integration under every ANSE stage.</p>
+      <figure><img src="./figures/anse/anse-05-kerkis-backbone.jpg" alt="KERKIS backbone" /></figure>
+    </section>
+    <section id="a06">
+      <h2>anse-06 — Continuous feedback</h2>
+      <p class="purpose">Runtime signals re-enter the engineering lifecycle.</p>
+      <figure><img src="./figures/anse/anse-06-continuous-feedback.jpg" alt="Continuous feedback" /></figure>
+    </section>
+
     <div class="howto" id="brownfield">
       <h2>Brownfield — TimeArch Brownfield Discovery</h2>
       <ul>

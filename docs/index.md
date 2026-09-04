@@ -69,7 +69,8 @@ Treat each team tool as a specialist **worker**. Put a thin **Orchestrator** in 
 
 | Page | Description |
 |------|-------------|
-| [**Figure gallery**](./modeling/gallery.html) | Brownfield + Greenfield slides |
+| [**Figure gallery**](./modeling/gallery.html) | ANSE + Brownfield + Greenfield slides |
+| [ANSE/KERKIS PDF](./modeling/exports/TimeArch-ANSE-KERKIS-Process-Figures.pdf) | Workshop slide deck |
 | [Brownfield model](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/META-COMPOSITION.md) | TimeArch Brownfield Discovery |
 | [Greenfield model](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/META-COMPOSITION-GREENFIELD.md) | TimeArch Greenfield Architecture Lifecycle |
 | [Glossary](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/GLOSSARY.md) | Clear name ↔ technical ID |
