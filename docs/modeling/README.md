@@ -14,10 +14,11 @@ TimeArch has **two wrapped processes** (same agents & database; different journe
 | # | Document | What it is |
 |---|----------|------------|
 | 1 | **[Figure gallery](./gallery.html)** | Drawn slides (brownfield + greenfield) |
-| 2 | **[Brownfield catalog](./figures/README.md)** | Figures 01–06 explained |
-| 3 | **[Greenfield catalog](./figures/greenfield/README.md)** | Figures gf-01–gf-06 explained |
-| 4 | **[Glossary](./GLOSSARY.md)** | Clear name ↔ technical ID |
-| 5 | **[ChatGPT / draw.io prompt](./prompts/chatgpt-drawio.md)** | Regenerate drawings |
+| 2 | **[PDF exports](./exports/README.md)** | Two PDF decks (brownfield / greenfield) |
+| 3 | **[Brownfield catalog](./figures/README.md)** | Figures 01–06 explained |
+| 4 | **[Greenfield catalog](./figures/greenfield/README.md)** | Figures gf-01–gf-06 explained |
+| 5 | **[Glossary](./GLOSSARY.md)** | Clear name ↔ technical ID |
+| 6 | **[ChatGPT / draw.io prompt](./prompts/chatgpt-drawio.md)** | Regenerate drawings |
 
 ## Naming rule
 
