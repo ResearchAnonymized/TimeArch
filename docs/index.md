@@ -62,14 +62,14 @@ Treat each team tool as a specialist **worker**. Put a thin **Orchestrator** in 
 
 ---
 
-## Process modeling (KERKIS)
+## KERKIS modeling
 
 | Page | Description |
 |------|-------------|
-| [**Figure gallery**](./modeling/gallery.html) | Clear-named brownfield process slides |
-| [Modeling README](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/README.md) | How to read the model |
-| [Glossary](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/GLOSSARY.md) | Clear name ↔ technical ID |
-| [Wrapped process](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/META-COMPOSITION.md) | TimeArch Brownfield Discovery |
+| [**Drawn figures**](./modeling/figures.html) | Workshop-style diagrams (gallery) |
+| [Meta-composition](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/KERKIS-TimeArch-Meta-Composition.md) | TimeArch as Actor · Artifact · Step · Process |
+| [Mermaid figures](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/KERKIS-figures.md) | Source Mermaid + embedded drawings |
+| [ChatGPT prompt](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/KERKIS-CHATGPT-PROMPT.md) | Prompt to refine figures |
 
 ## Repo links
 
