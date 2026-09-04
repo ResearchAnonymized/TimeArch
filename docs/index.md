@@ -62,6 +62,14 @@ Treat each team tool as a specialist **worker**. Put a thin **Orchestrator** in 
 
 ---
 
+## KERKIS modeling
+
+| Page | Description |
+|------|-------------|
+| [Meta-composition](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/KERKIS-TimeArch-Meta-Composition.md) | TimeArch as Actor · Artifact · Step · Process |
+| [Mermaid figures](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/KERKIS-figures.md) | Workshop-style diagrams for draw.io |
+| [ChatGPT prompt](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/KERKIS-CHATGPT-PROMPT.md) | Prompt to generate / refine figures |
+
 ## Repo links
 
 - [GitHub repository](https://github.com/ResearchAnonymized/TimeArch)
