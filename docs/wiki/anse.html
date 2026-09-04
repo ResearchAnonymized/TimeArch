@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ANSE — Artifact-Driven Autonomous Software Engineering</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --fg: #1a2332;
+      --muted: #5c6b7a;
+      --card: #ffffff;
+      --line: #d9d2c5;
+      --accent: #1e3a5f;
+      --accent-soft: #e8eef5;
+      --existing: #1e5a3a;
+      --existing-bg: #e6f2eb;
+      --planned: #8a5a12;
+      --planned-bg: #f8efd9;
+      --runtime: #3d4f66;
+      --runtime-bg: #e8edf3;
+      --kerkis: #243447;
+      --feedback: #8b3a3a;
+      --shadow: 0 1px 2px rgba(26, 35, 50, 0.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.55;
+    }
+    a { color: var(--accent); }
+    header.page-head {
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(247, 244, 239, 0.96);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(8px);
+    }
+    header.page-head a.back { text-decoration: none; font-size: 0.9rem; }
+    header.page-head h1 {
+      margin: 0.35rem 0 0;
+      font-size: clamp(1.25rem, 2.5vw, 1.55rem);
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    header.page-head p {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      max-width: 46rem;
+      font-size: 0.95rem;
+    }
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      padding: 0.85rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: #f3eee6;
+    }
+    .toc a {
+      text-decoration: none;
+      color: var(--fg);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.8rem;
+      background: var(--card);
+    }
+    .toc a:hover { border-color: var(--accent); }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+    section.block {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1.35rem 1.4rem;
+      margin: 0 0 1.35rem;
+      box-shadow: var(--shadow);
+    }
+    section.block h2 {
+      margin: 0 0 0.55rem;
+      font-size: 1.2rem;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+    section.block h3 {
+      margin: 1.15rem 0 0.45rem;
+      font-size: 1.02rem;
+      color: var(--fg);
+    }
+    .lede {
+      color: var(--muted);
+      margin: 0 0 1rem;
+      max-width: 52rem;
+    }
+    .pullquote {
+      margin: 1rem 0 0;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--accent-soft);
+      border-radius: 0 8px 8px 0;
+      font-size: 0.98rem;
+      color: var(--fg);
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem 1.1rem;
+      margin: 0 0 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .dot {
+      width: 0.7rem;
+      height: 0.7rem;
+      border-radius: 999px;
+      display: inline-block;
+    }
+    .dot.existing { background: var(--existing); }
+    .dot.planned { background: var(--planned); }
+    .dot.runtime { background: var(--runtime); }
+
+    /* —— Lifecycle —— */
+    .anse-arch {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #faf8f4 0%, #fff 40%);
+      padding: 1rem;
+      overflow: hidden;
+    }
+    .anse-arch-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.65rem;
+      font-weight: 600;
+    }
+    .lifecycle {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+    .stage {
+      flex: 1 1 0;
+      min-width: 0;
+      position: relative;
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 0.75rem 0.55rem 0.7rem;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+    }
+    .stage:first-child { border-radius: 8px 0 0 8px; }
+    .stage:last-of-type { border-radius: 0 8px 8px 0; }
+    .stage + .stage { margin-left: -1px; }
+    .stage:hover,
+    .stage.is-active {
+      border-color: var(--accent);
+      z-index: 2;
+      box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.12);
+    }
+    .stage-num {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .stage-name {
+      display: block;
+      margin: 0.2rem 0 0.45rem;
+      font-size: clamp(0.72rem, 1.35vw, 0.88rem);
+      font-weight: 650;
+      line-height: 1.25;
+      color: var(--accent);
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+      padding: 0.15rem 0.4rem;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+    .badge.existing {
+      background: var(--existing-bg);
+      color: var(--existing);
+      border-color: #b7d4c2;
+    }
+    .badge.planned {
+      background: var(--planned-bg);
+      color: var(--planned);
+      border-color: #e2c98a;
+    }
+    .badge.runtime {
+      background: var(--runtime-bg);
+      color: var(--runtime);
+      border-color: #b8c4d4;
+    }
+    .connector {
+      display: none;
+    }
+
+    .artifact-rail {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.45rem;
+      margin-top: 0.75rem;
+    }
+    .artifact-cell {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 0.5rem 0.45rem;
+      background: #fbfaf7;
+      font-size: 0.72rem;
+      color: var(--muted);
+      min-height: 5.5rem;
+    }
+    .artifact-cell strong {
+      display: block;
+      color: var(--fg);
+      font-size: 0.74rem;
+      margin-bottom: 0.3rem;
+    }
+    .artifact-cell ul {
+      margin: 0;
+      padding-left: 0.95rem;
+    }
+    .artifact-cell li { margin: 0.1rem 0; }
+
+    .agent-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem 0.25rem;
+      margin: 0.9rem 0 0.2rem;
+      font-size: 0.8rem;
+    }
+    .agent-chain .node {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.3rem 0.55rem;
+      background: var(--card);
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .agent-chain .node.art {
+      background: #f3eee6;
+      color: var(--fg);
+      font-weight: 500;
+    }
+    .agent-chain .arrow { color: var(--muted); padding: 0 0.15rem; }
+
+    .memory-strip,
+    .kerkis-strip {
+      margin-top: 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 0.75rem 0.9rem;
+    }
+    .memory-strip {
+      background: #f5f1ea;
+    }
+    .kerkis-strip {
+      background: var(--kerkis);
+      color: #eef3f8;
+      border-color: #1a2838;
+    }
+    .memory-strip h4,
+    .kerkis-strip h4 {
+      margin: 0 0 0.35rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .kerkis-strip h4 { color: #c9d6e6; }
+    .memory-strip p,
+    .kerkis-strip p {
+      margin: 0 0 0.55rem;
+      font-size: 0.86rem;
+      opacity: 0.92;
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .chip {
+      font-size: 0.72rem;
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+    }
+    .memory-strip .chip {
+      background: #fff;
+      border-color: var(--line);
+      color: var(--fg);
+    }
+    .kerkis-links {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.25rem;
+      margin-top: 0.65rem;
+    }
+    .kerkis-links span {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(91, 156, 255, 0.55);
+    }
+
+    .feedback-banner {
+      margin-top: 0.75rem;
+      border: 1px dashed var(--feedback);
+      border-radius: 10px;
+      padding: 0.7rem 0.85rem;
+      background: #faf3f3;
+      font-size: 0.86rem;
+      color: var(--fg);
+    }
+    .feedback-banner strong { color: var(--feedback); }
+    .feedback-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .feedback-flow em {
+      font-style: normal;
+      border: 1px solid #e0bcbc;
+      background: #fff;
+      border-radius: 5px;
+      padding: 0.15rem 0.4rem;
+      color: var(--fg);
+    }
+
+    /* Detail panel */
+    .detail {
+      margin-top: 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 0.95rem 1rem;
+      display: none;
+    }
+    .detail.is-open { display: block; }
+    .detail-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.85rem;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.55rem;
+    }
+    .detail-head h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--accent);
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem 1rem;
+      font-size: 0.88rem;
+    }
+    .detail-grid h4 {
+      margin: 0 0 0.25rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    .detail-grid ul {
+      margin: 0;
+      padding-left: 1.05rem;
+    }
+    .hint {
+      margin: 0.55rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* Supporting diagrams */
+    .flow-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      margin: 0.65rem 0;
+    }
+    .flow-pill {
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      border-radius: 8px;
+      padding: 0.4rem 0.65rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .flow-pill.soft {
+      font-weight: 500;
+      color: var(--fg);
+      background: var(--card);
+    }
+    .flow-pill.qa {
+      border-color: #e2c98a;
+      background: var(--planned-bg);
+      color: var(--planned);
+    }
+    .flow-arrow { color: var(--muted); font-size: 0.95rem; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.85rem 0.95rem;
+      background: #fbfaf7;
+    }
+    .mini-card h3 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+    .mini-card p, .mini-card ul {
+      margin: 0;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+    .mini-card ul { padding-left: 1.05rem; margin-top: 0.35rem; color: var(--fg); }
+
+    .trace {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      align-items: center;
+      margin-top: 0.65rem;
+    }
+    .trace span {
+      font-size: 0.78rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--card);
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .tool-card {
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 0.85rem;
+      background: #faf8f4;
+    }
+    .tool-card h3 {
+      margin: 0 0 0.25rem;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+    .tool-card .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .tool-card p {
+      margin: 0;
+      font-size: 0.84rem;
+      color: var(--fg);
+    }
+    .placeholder {
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    footer.page-foot {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.25rem 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 860px) {
+      .lifecycle {
+        flex-direction: column;
+      }
+      .stage,
+      .stage:first-child,
+      .stage:last-of-type {
+        border-radius: 8px;
+        margin-left: 0;
+      }
+      .stage + .stage { margin-top: 0.4rem; }
+      .artifact-rail,
+      .kerkis-links {
+        grid-template-columns: 1fr 1fr;
+      }
+      .two-col,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 520px) {
+      .artifact-rail {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-head">
+    <a class="back" href="../">← Wiki home</a>
+    <h1>ANSE — Artifact-Driven Autonomous Software Engineering</h1>
+    <p>
+      An AI-native software engineering toolchain for autonomous development across the
+      complete lifecycle. TimeArch provides the <strong>Software Design &amp; Architecture</strong>
+      capability within ANSE; KERKIS coordinates tools and artifacts underneath.
+    </p>
+  </header>
+
+  <nav class="toc" aria-label="On this page">
+    <a href="#intro">Intro</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#artifacts">Artifacts</a>
+    <a href="#req-testing">RE → Testing</a>
+    <a href="#qa">Quality Assurance</a>
+    <a href="#deployment">Deployment</a>
+    <a href="#kerkis">KERKIS</a>
+    <a href="#feedback">Feedback</a>
+    <a href="#ecosystem">Ecosystem</a>
+  </nav>
+
+  <main>
+    <section class="block" id="intro">
+      <h2>What ANSE is</h2>
+      <p class="lede">
+        ANSE is a research toolchain for autonomous software engineering. Specialized tools
+        cover lifecycle stages; they collaborate through <strong>explicit, versioned engineering
+        artifacts</strong>, not only through free-form prompts. Production feedback closes a
+        continuous evolution loop.
+      </p>
+      <div class="legend" aria-label="Status legend">
+        <span><i class="dot existing"></i> Existing capability</span>
+        <span><i class="dot planned"></i> Planned / under development</span>
+        <span><i class="dot runtime"></i> Runtime environment</span>
+      </div>
+      <ul class="lede" style="margin:0;padding-left:1.2rem;color:var(--fg)">
+        <li><strong>Existing today:</strong> Requirements Engineering · Software Design &amp; Architecture (TimeArch) · Coding / Implementation</li>
+        <li><strong>Next:</strong> Quality Assurance · Deployment</li>
+        <li><strong>Runtime:</strong> Production — where the generated system operates and feeds change back</li>
+      </ul>
+    </section>
+
+    <section class="block" id="architecture">
+      <h2>ANSE lifecycle architecture</h2>
+      <p class="lede">
+        Click a stage for purpose, artifacts, status, and capabilities.
+        Stages form <strong>one connected lifecycle</strong>, not six isolated cards.
+      </p>
+
+      <div class="anse-arch" id="anse-arch">
+        <div class="anse-arch-label">ANSE toolchain</div>
+
+        <div class="lifecycle" role="tablist" aria-label="ANSE lifecycle stages">
+          <button type="button" class="stage is-active" role="tab" aria-selected="true" data-stage="re" id="tab-re">
+            <span class="stage-num">01</span>
+            <span class="stage-name">Requirements Engineering</span>
+            <span class="badge existing">Existing</span>
+          </button>
+          <button type="button" class="stage" role="tab" aria-selected="false" data-stage="arch" id="tab-arch">
+            <span class="stage-num">02</span>
+            <span class="stage-name">Software Design &amp; Architecture</span>
+            <span class="badge existing">Existing</span>
+          </button>
+          <button type="button" class="stage" role="tab" aria-selected="false" data-stage="code" id="tab-code">
+            <span class="stage-num">03</span>
+            <span class="stage-name">Coding / Implementation</span>
+            <span class="badge existing">Existing</span>
+          </button>
+          <button type="button" class="stage" role="tab" aria-selected="false" data-stage="qa" id="tab-qa">
+            <span class="stage-num">04</span>
+            <span class="stage-name">Quality Assurance</span>
+            <span class="badge planned">Planned</span>
+          </button>
+          <button type="button" class="stage" role="tab" aria-selected="false" data-stage="deploy" id="tab-deploy">
+            <span class="stage-num">05</span>
+            <span class="stage-name">Deployment</span>
+            <span class="badge planned">Planned</span>
+          </button>
+          <button type="button" class="stage" role="tab" aria-selected="false" data-stage="runtime" id="tab-runtime">
+            <span class="stage-num">06</span>
+            <span class="stage-name">Production / Runtime</span>
+            <span class="badge runtime">Runtime</span>
+          </button>
+        </div>
+
+        <div class="artifact-rail" aria-hidden="true">
+          <div class="artifact-cell"><strong>RE artifacts</strong><ul><li>Requirements</li><li>User stories</li><li>Acceptance criteria</li><li>Constraints</li><li>Initial test cases</li></ul></div>
+          <div class="artifact-cell"><strong>Architecture</strong><ul><li>SAD</li><li>ADRs</li><li>Views / C4</li><li>Component models</li><li>API definitions</li></ul></div>
+          <div class="artifact-cell"><strong>Coding</strong><ul><li>Source code</li><li>Components</li><li>APIs</li><li>Configuration</li><li>Unit tests</li></ul></div>
+          <div class="artifact-cell"><strong>QA</strong><ul><li>Test suites</li><li>Test results</li><li>Quality reports</li><li>Traceability</li><li>Defect reports</li></ul></div>
+          <div class="artifact-cell"><strong>Deployment</strong><ul><li>Dockerfile / image</li><li>CI/CD config</li><li>K8s manifests</li><li>Runtime config</li><li>Deploy report</li></ul></div>
+          <div class="artifact-cell"><strong>Runtime</strong><ul><li>Logs</li><li>Monitoring</li><li>Failures</li><li>Perf data</li><li>User feedback</li></ul></div>
+        </div>
+
+        <div class="detail is-open" id="stage-detail" role="tabpanel" aria-live="polite"></div>
+        <p class="hint">Tip: select Quality Assurance or Deployment to inspect planned next capabilities.</p>
+
+        <div class="memory-strip">
+          <h4>Shared engineering artifacts</h4>
+          <p>Traceability · Provenance · Versioning · Relationships — the engineering memory every stage reads and writes.</p>
+          <div class="chip-row">
+            <span class="chip">Requirements</span>
+            <span class="chip">Acceptance criteria</span>
+            <span class="chip">Test cases</span>
+            <span class="chip">ADRs</span>
+            <span class="chip">Architecture models</span>
+            <span class="chip">Source code</span>
+            <span class="chip">Test results</span>
+            <span class="chip">Deploy configs</span>
+            <span class="chip">Runtime logs</span>
+            <span class="chip">Change requests</span>
+          </div>
+        </div>
+
+        <div class="kerkis-strip">
+          <h4>KERKIS — orchestration &amp; integration</h4>
+          <p>
+            Not a lifecycle stage. KERKIS sits underneath ANSE and connects every stage:
+            agent orchestration, tool integration, artifact &amp; context management,
+            provenance, workflow coordination, lifecycle state, and feedback handling.
+          </p>
+          <div class="chip-row">
+            <span class="chip">Agent orchestration</span>
+            <span class="chip">Tool integration</span>
+            <span class="chip">Artifact management</span>
+            <span class="chip">Context management</span>
+            <span class="chip">Traceability</span>
+            <span class="chip">Provenance</span>
+            <span class="chip">Workflow coordination</span>
+            <span class="chip">Lifecycle state</span>
+            <span class="chip">Feedback handling</span>
+          </div>
+          <div class="kerkis-links" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="feedback-banner">
+          <strong>Continuous feedback &amp; change management</strong>
+          — Production is not the end of the pipeline.
+          <div class="feedback-flow">
+            <em>Runtime signals</em> → <em>Change request</em> → <em>Impact analysis</em> →
+            <em>Requirements</em> · <em>Architecture</em> · <em>Code</em> · <em>Tests</em> →
+            <em>Redeploy</em>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="artifacts">
+      <h2>Artifact-driven engineering</h2>
+      <p class="lede">
+        Each stage consumes and produces typed engineering artifacts that later stages
+        (and other tools) can verify, version, and trace.
+      </p>
+      <div class="pullquote">
+        Agents collaborate through explicit, traceable software artifacts rather than only through prompts.
+      </div>
+      <div class="agent-chain" aria-label="Agent–artifact collaboration pattern">
+        <span class="node">Agent</span><span class="arrow">↓</span>
+        <span class="node art">Engineering artifact</span><span class="arrow">↓</span>
+        <span class="node">Agent</span><span class="arrow">↓</span>
+        <span class="node art">Engineering artifact</span><span class="arrow">↓</span>
+        <span class="node">Agent</span>
+      </div>
+      <p class="hint" style="text-align:center">
+        Provenance, version, producer, consumer, relationships, and lifecycle stage travel with each artifact —
+        without requiring the visitor to read a metadata schema first.
+      </p>
+    </section>
+
+    <section class="block" id="req-testing">
+      <h2>Requirements Engineering → testing</h2>
+      <p class="lede">
+        Testing begins in requirements. Initial test cases are first-class RE outputs,
+        not an afterthought of coding.
+      </p>
+      <div class="flow-row">
+        <span class="flow-pill">Requirements</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-pill">Acceptance criteria</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-pill">Initial test cases</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-pill soft">Implementation</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-pill qa">Verification</span>
+      </div>
+      <div class="mini-card" style="margin-top:0.75rem">
+        <h3>Initial tests are derived from</h3>
+        <div class="flow-row">
+          <span class="flow-pill soft">Requirements</span>
+          <span class="flow-arrow">+</span>
+          <span class="flow-pill soft">Standards</span>
+          <span class="flow-arrow">+</span>
+          <span class="flow-pill soft">Regulations</span>
+          <span class="flow-arrow">+</span>
+          <span class="flow-pill soft">Domain knowledge</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="qa">
+      <h2>Quality Assurance — lifecycle-wide verification</h2>
+      <p class="lede">
+        QA is a <strong>planned</strong> ANSE capability. It does not stop at “does the code compile?”
+        It asks whether the implemented and deployed system satisfies original requirements
+        and architectural decisions.
+      </p>
+      <div class="two-col">
+        <div class="mini-card">
+          <h3>Verification graph</h3>
+          <ul>
+            <li>Requirements ↔ Architecture</li>
+            <li>Architecture ↔ Implementation</li>
+            <li>Implementation ↔ Tests</li>
+            <li>Tests ↔ Running system</li>
+          </ul>
+        </div>
+        <div class="mini-card">
+          <h3>Core traceability</h3>
+          <div class="trace">
+            <span>Requirement</span>→
+            <span>Acceptance criteria</span>→
+            <span>Test case</span>→
+            <span>Implementation</span>→
+            <span>Test result</span>
+          </div>
+        </div>
+      </div>
+      <h3>Planned QA capabilities</h3>
+      <div class="chip-row" style="margin-top:0.45rem">
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Unit</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Integration</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Regression</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">End-to-end</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">API</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Performance</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Security</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Architecture conformance</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Requirements verification</span>
+      </div>
+    </section>
+
+    <section class="block" id="deployment">
+      <h2>Deployment — to a running, verified system</h2>
+      <p class="lede">
+        Deployment is a <strong>planned</strong> capability. ANSE should not stop at generated source code.
+        Implementation moves into a running environment with continued QA.
+      </p>
+      <div class="flow-row">
+        <span class="flow-pill">Build</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Package</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Containerize</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Configure</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Deploy</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Validate</span>
+      </div>
+      <div class="flow-row" style="margin-top:0.85rem">
+        <span class="flow-pill soft">Code</span><span class="flow-arrow">→</span>
+        <span class="flow-pill qa">QA</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Deploy</span><span class="flow-arrow">→</span>
+        <span class="flow-pill qa">Smoke / E2E</span><span class="flow-arrow">→</span>
+        <span class="flow-pill soft">Running system</span>
+      </div>
+      <h3>Planned deployment capabilities</h3>
+      <div class="chip-row" style="margin-top:0.45rem">
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Docker</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Kubernetes</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">CI/CD</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Cloud / hosting</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Infra configuration</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Health checks</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Smoke tests</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">E2E validation</span>
+        <span class="chip" style="background:#fff;border:1px solid var(--line)">Rollback</span>
+      </div>
+    </section>
+
+    <section class="block" id="kerkis">
+      <h2>KERKIS — backbone, not a stage</h2>
+      <p class="lede">
+        KERKIS is the orchestration and integration layer under the ANSE toolchain.
+        ANSE tools specialize; KERKIS coordinates them and the shared artifact store.
+        See also TimeArch’s
+        <a href="../modeling/gallery.html">process modeling gallery</a>
+        and
+        <a href="../modeling/META-COMPOSITION.md">brownfield / greenfield wrapped-process docs</a>.
+      </p>
+      <div class="mini-card">
+        <h3>Conceptual stack</h3>
+        <p style="color:var(--fg);margin:0.35rem 0">
+          <strong>ANSE toolchain</strong> — RE → Architecture → Coding → QA → Deployment → Runtime<br />
+          <strong>Shared engineering artifacts</strong> — traceability · provenance · versioning<br />
+          <strong>KERKIS</strong> — orchestration &amp; integration across every stage
+        </p>
+      </div>
+    </section>
+
+    <section class="block" id="feedback">
+      <h2>Continuous feedback &amp; change management</h2>
+      <p class="lede">
+        ANSE is not a one-shot generator. Runtime signals become change requests that
+        re-enter requirements, architecture, code, and tests before redeployment.
+      </p>
+      <div class="flow-row">
+        <span class="flow-pill soft">Production / Runtime</span><span class="flow-arrow">→</span>
+        <span class="flow-pill soft">Monitoring &amp; feedback</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Change request</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Impact analysis</span>
+      </div>
+      <div class="flow-row">
+        <span class="flow-pill soft">Affected requirements</span><span class="flow-arrow">→</span>
+        <span class="flow-pill soft">Architecture</span><span class="flow-arrow">→</span>
+        <span class="flow-pill soft">Code</span><span class="flow-arrow">→</span>
+        <span class="flow-pill soft">Tests</span><span class="flow-arrow">→</span>
+        <span class="flow-pill">Redeployment</span>
+      </div>
+      <p class="hint">
+        Feedback sources include user feedback, runtime failures, monitoring events,
+        performance and security issues, quality signals, and new or changed requirements.
+      </p>
+    </section>
+
+    <section class="block" id="ecosystem">
+      <h2>ANSE ecosystem / tools</h2>
+      <p class="lede">
+        Individual tools plug into lifecycle stages. Names and URLs below are placeholders
+        until official tool pages are published — do not treat italics as live links.
+      </p>
+      <div class="tool-grid">
+        <article class="tool-card">
+          <h3>TimeArch</h3>
+          <div class="meta">Stage: Software Design &amp; Architecture · Status: Existing</div>
+          <p>Multi-agent architecture lifecycle (greenfield &amp; brownfield), documents, and handoff packages.</p>
+          <p style="margin-top:0.45rem"><a href="https://github.com/ResearchAnonymized/TimeArch">Repository</a> · <a href="../">Docs</a></p>
+        </article>
+        <article class="tool-card">
+          <h3 class="placeholder">[Requirements tool — TBD]</h3>
+          <div class="meta">Stage: Requirements Engineering · Status: Existing (partner)</div>
+          <p class="placeholder">Short description, repository, and documentation links to be added.</p>
+        </article>
+        <article class="tool-card">
+          <h3 class="placeholder">[Coding tool — TBD]</h3>
+          <div class="meta">Stage: Coding / Implementation · Status: Existing (partner)</div>
+          <p class="placeholder">Short description, repository, and documentation links to be added.</p>
+        </article>
+        <article class="tool-card">
+          <h3 class="placeholder">[QA tool — TBD]</h3>
+          <div class="meta">Stage: Quality Assurance · Status: Planned</div>
+          <p class="placeholder">Lifecycle-wide verification tooling — name and links TBD.</p>
+        </article>
+        <article class="tool-card">
+          <h3 class="placeholder">[Deployment tool — TBD]</h3>
+          <div class="meta">Stage: Deployment · Status: Planned</div>
+          <p class="placeholder">Autonomous build → deploy → validate — name and links TBD.</p>
+        </article>
+        <article class="tool-card">
+          <h3 class="placeholder">[KERKIS — TBD]</h3>
+          <div class="meta">Layer: Orchestration &amp; integration · Status: In progress</div>
+          <p class="placeholder">Orchestrator / artifact backbone — repository and docs TBD.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-foot">
+    Part of the <a href="../">TimeArch wiki</a> ·
+    Modeling figures: <a href="../modeling/gallery.html">gallery</a> ·
+    Factory integration: <a href="./Software-Factory-Integration.html">Software Factory Integration</a>
+  </footer>
+
+  <script>
+    const STAGES = {
+      re: {
+        title: "Requirements Engineering",
+        status: "Existing",
+        statusClass: "existing",
+        purpose: "Elicit, structure, and normalize stakeholder intent into verifiable requirements artifacts—including early acceptance criteria and initial test cases.",
+        inputs: ["Stakeholder intent", "Domain knowledge", "Standards / regulations", "Prior change requests"],
+        outputs: ["Requirements", "User stories", "Acceptance criteria", "Constraints", "Initial test cases"],
+        capabilities: ["Elicitation & normalization", "Acceptance-criteria authoring", "Early test-case derivation", "Constraint capture"],
+      },
+      arch: {
+        title: "Software Design & Architecture",
+        status: "Existing — TimeArch",
+        statusClass: "existing",
+        purpose: "Turn requirements (and optional as-is systems) into architecture decisions, views, and implementable packages with human gates.",
+        inputs: ["Requirements package", "Optional brownfield sources", "Quality attribute goals"],
+        outputs: ["SAD / architecture views", "ADRs", "Component & interface models", "Change / architecture package", "Handoff for coding agents"],
+        capabilities: ["Greenfield 18-stage lifecycle", "Brownfield Import→Recover→Change", "Document export (SRS/SAD/…)", "Gate-aware agent packs"],
+      },
+      code: {
+        title: "Coding / Implementation",
+        status: "Existing",
+        statusClass: "existing",
+        purpose: "Realize approved architecture as source code, components, APIs, configuration, and developer tests against the handoff package.",
+        inputs: ["Architecture package / SDP", "ADRs", "Work items", "API contracts"],
+        outputs: ["Source code", "Components", "APIs", "Configuration", "Unit tests", "Pull requests"],
+        capabilities: ["Code generation / editing agents", "Contract-driven implementation", "Unit-level tests", "PR + verification return"],
+      },
+      qa: {
+        title: "Quality Assurance",
+        status: "Planned",
+        statusClass: "planned",
+        purpose: "Lifecycle-wide verification: does the implemented and deployed system satisfy original requirements and architectural decisions?",
+        inputs: ["Requirements", "Acceptance criteria", "Architecture / ADRs", "Source code", "Deployed system"],
+        outputs: ["Test suites", "Test results", "Quality reports", "Traceability evidence", "Defect reports"],
+        capabilities: ["Unit", "Integration", "Regression", "E2E", "API", "Performance", "Security", "Architecture conformance", "Requirements verification"],
+      },
+      deploy: {
+        title: "Deployment",
+        status: "Planned",
+        statusClass: "planned",
+        purpose: "Move implementation into a running environment and validate it there—build, package, configure, deploy, then smoke/E2E checks with rollback.",
+        inputs: ["Verified build artifacts", "Environment config", "QA gates"],
+        outputs: ["Container images", "CI/CD & K8s configs", "Deployment report", "Health evidence"],
+        capabilities: ["Docker", "Kubernetes", "CI/CD", "Cloud hosting", "Health checks", "Smoke / E2E validation", "Rollback"],
+      },
+      runtime: {
+        title: "Production / Runtime",
+        status: "Runtime",
+        statusClass: "runtime",
+        purpose: "Operate the generated system and emit feedback that re-enters the engineering lifecycle as change.",
+        inputs: ["Deployed system", "Traffic / users", "Operational policies"],
+        outputs: ["Logs", "Monitoring data", "Failures", "Performance data", "User feedback", "Operational events"],
+        capabilities: ["Observability", "Incident signals", "Feedback → change requests", "Continuous evolution loop"],
+      },
+    };
+
+    const detail = document.getElementById("stage-detail");
+    const tabs = [...document.querySelectorAll(".stage")];
+
+    function renderDetail(key) {
+      const s = STAGES[key];
+      if (!s) return;
+      detail.innerHTML = `
+        <div class="detail-head">
+          <h3>${s.title}</h3>
+          <span class="badge ${s.statusClass}">${s.status}</span>
+        </div>
+        <div class="detail-grid">
+          <div>
+            <h4>Purpose</h4>
+            <p style="margin:0">${s.purpose}</p>
+          </div>
+          <div>
+            <h4>Capabilities</h4>
+            <ul>${s.capabilities.map((c) => `<li>${c}</li>`).join("")}</ul>
+          </div>
+          <div>
+            <h4>Input artifacts</h4>
+            <ul>${s.inputs.map((c) => `<li>${c}</li>`).join("")}</ul>
+          </div>
+          <div>
+            <h4>Output artifacts</h4>
+            <ul>${s.outputs.map((c) => `<li>${c}</li>`).join("")}</ul>
+          </div>
+        </div>`;
+      detail.classList.add("is-open");
+    }
+
+    function activate(key) {
+      tabs.forEach((btn) => {
+        const on = btn.dataset.stage === key;
+        btn.classList.toggle("is-active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      renderDetail(key);
+    }
+
+    tabs.forEach((btn) => {
+      btn.addEventListener("click", () => activate(btn.dataset.stage));
+      btn.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        e.preventDefault();
+        const i = tabs.indexOf(btn);
+        const next = e.key === "ArrowRight" ? tabs[(i + 1) % tabs.length] : tabs[(i - 1 + tabs.length) % tabs.length];
+        next.focus();
+        activate(next.dataset.stage);
+      });
+    });
+
+    activate("re");
+  </script>
+</body>
+</html>

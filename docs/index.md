@@ -19,6 +19,7 @@ Planning and user guide for **TimeArch** — multi-agent software architecture d
 
 | I want to… | Go to |
 |------------|-------|
+| Understand the overall ANSE concept | [**ANSE architecture (interactive)**](./wiki/anse.html) |
 | Run the app locally | [Getting Started](./wiki/Getting-Started.html) |
 | Import an existing codebase | [Brownfield Discovery](./wiki/Brownfield-Discovery.html) |
 | Hand off to a coding agent | [Software Delivery Package (SDP)](./wiki/Software-Delivery-Package.html) |
