@@ -77,6 +77,14 @@ Details: [Brownfield Discovery](./Brownfield-Discovery.md)
 
 ---
 
+## KERKIS / ANSE modeling
+
+Model TimeArch with Actor · Artifact · Step · Process and wrap it as one meta-composed Step:
+
+- [TimeArch Meta-Composition](../modeling/KERKIS-TimeArch-Meta-Composition.md)
+- [Mermaid figures](../modeling/KERKIS-figures.md)
+- [ChatGPT + draw.io prompt](../modeling/KERKIS-CHATGPT-PROMPT.md)
+
 ## Related repo docs
 
 - [Architecture & code conventions](../ARCHITECTURE.md)
