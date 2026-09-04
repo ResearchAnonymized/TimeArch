@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TimeArch — Brownfield process figures</title>
+  <title>TimeArch — process figures (Brownfield & Greenfield)</title>
   <style>
     :root {
       --bg: #f7f4ef;
@@ -77,30 +77,39 @@
 <body>
   <header>
     <a href="./README.md">← Modeling docs</a>
-    <h1>TimeArch Brownfield — process figures</h1>
+    <h1>TimeArch process figures</h1>
     <p>
-      Clear English names on every diagram. Technical IDs (IA_/OA_/MC_) are optional
-      and defined in the <a href="./GLOSSARY.md">glossary</a>.
+      Brownfield and Greenfield wrapped processes with clear English names.
+      Technical IDs are optional — see the <a href="./GLOSSARY.md">glossary</a>.
     </p>
   </header>
 
   <nav>
-    <a href="#f01">01 Wrapped process</a>
-    <a href="#f02">02 Step by step</a>
-    <a href="#f03">03 Who works</a>
-    <a href="#f04">04 Review loop</a>
+    <a href="#brownfield">Brownfield</a>
+    <a href="#f01">01 Wrapped</a>
+    <a href="#f02">02 Steps</a>
+    <a href="#f03">03 Who</a>
+    <a href="#f04">04 Review</a>
     <a href="#f05">05 AI step</a>
-    <a href="#f06">06 Nested analysis</a>
+    <a href="#f06">06 Nested</a>
+    <a href="#greenfield">Greenfield</a>
+    <a href="#gf01">gf-01 Wrapped</a>
+    <a href="#gf02">gf-02 Steps</a>
+    <a href="#gf03">gf-03 Who</a>
+    <a href="#gf04">gf-04 Seal</a>
+    <a href="#gf05">gf-05 AI step</a>
+    <a href="#gf06">gf-06 Nested</a>
   </nav>
 
   <main>
-    <div class="howto">
-      <h2>How to read these figures</h2>
+    <div class="howto" id="brownfield">
+      <h2>Brownfield — TimeArch Brownfield Discovery</h2>
       <ul>
         <li><strong>Navy</strong> = automated step (code or AI)</li>
         <li><strong>Tan</strong> = knowledge package (artifact)</li>
         <li><strong>Grey-blue</strong> = human decision</li>
         <li><strong>Dashed tan</strong> = prompt context (role, task, rules, references)</li>
+        <li>Catalog: <a href="./figures/README.md">figures/README.md</a> · Model: <a href="./META-COMPOSITION.md">META-COMPOSITION.md</a></li>
       </ul>
     </div>
 
@@ -189,12 +198,99 @@
         <img src="./figures/06-nested-change-analysis.jpg" alt="Nested change analysis" />
       </figure>
     </section>
+
+    <div class="howto" id="greenfield">
+      <h2>Greenfield — TimeArch Greenfield Architecture Lifecycle</h2>
+      <ul>
+        <li>Same legend as brownfield (navy / tan / grey-blue)</li>
+        <li>18 stages in four phases; Stage 15 seals the package before coding stages</li>
+        <li>Catalog: <a href="./figures/greenfield/README.md">figures/greenfield/README.md</a> · Model: <a href="./META-COMPOSITION-GREENFIELD.md">META-COMPOSITION-GREENFIELD.md</a></li>
+      </ul>
+    </div>
+
+    <section id="gf01">
+      <h2>gf-01 — TimeArch Greenfield Architecture Lifecycle (wrapped process)</h2>
+      <p class="purpose">What partners see outside, and the four phases inside.</p>
+      <div class="meta">
+        <div><strong>Clear name:</strong> TimeArch Greenfield Architecture Lifecycle</div>
+        <div><strong>Technical ID:</strong> MC_timearch_greenfield</div>
+        <div><strong>Inputs:</strong> Project brief · Requirements corpus</div>
+        <div><strong>Outputs:</strong> SRS · SAD · AAR · FAP · Sealed package · Scaffolding</div>
+      </div>
+      <figure>
+        <img src="./figures/greenfield/gf-01-greenfield-wrapped-process.jpg" alt="Greenfield wrapped process" />
+      </figure>
+    </section>
+
+    <section id="gf02">
+      <h2>gf-02 — Greenfield path — step by step</h2>
+      <p class="purpose">All 18 stages grouped into four phases.</p>
+      <div class="meta">
+        <div><strong>Phases:</strong> Requirements (1–3) · Architecture (4–10) · Validation (11–14) · Delivery (15–18)</div>
+        <div><strong>Gate:</strong> Stage 15 seal unlocks 16–18</div>
+      </div>
+      <figure>
+        <img src="./figures/greenfield/gf-02-greenfield-step-by-step.jpg" alt="Greenfield step by step" />
+      </figure>
+    </section>
+
+    <section id="gf03">
+      <h2>gf-03 — Who does the work (greenfield)</h2>
+      <p class="purpose">Code, AI, and humans across the lifecycle.</p>
+      <div class="meta">
+        <div><strong>Code:</strong> Locks, document assembly, package-lock</div>
+        <div><strong>AI:</strong> Stage generators · Planner/Executor/Critic</div>
+        <div><strong>Human:</strong> Author, architect review, Stage 15 approvers</div>
+      </div>
+      <figure>
+        <img src="./figures/greenfield/gf-03-who-does-the-work.jpg" alt="Who does the work greenfield" />
+      </figure>
+    </section>
+
+    <section id="gf04">
+      <h2>gf-04 — Human review and package seal</h2>
+      <p class="purpose">Per-stage critique loop and Stage 15 seal.</p>
+      <div class="meta">
+        <div><strong>Per stage:</strong> Accept / dismiss / refine → lock</div>
+        <div><strong>Stage 15:</strong> Stakeholder approval → sealed package</div>
+        <div><strong>Safety:</strong> 16–18 blocked until seal</div>
+      </div>
+      <figure>
+        <img src="./figures/greenfield/gf-04-human-review-and-seal.jpg" alt="Human review and package seal" />
+      </figure>
+    </section>
+
+    <section id="gf05">
+      <h2>gf-05 — One AI step — Analyze requirements</h2>
+      <p class="purpose">Stage 2 Requirement Analysis Agent in detail.</p>
+      <div class="meta">
+        <div><strong>Input:</strong> Requirements corpus</div>
+        <div><strong>Output:</strong> Requirements analysis artifact</div>
+      </div>
+      <figure>
+        <img src="./figures/greenfield/gf-05-one-ai-step-analyze-requirements.jpg" alt="Analyze requirements AI step" />
+      </figure>
+    </section>
+
+    <section id="gf06">
+      <h2>gf-06 — Nested agentic stage</h2>
+      <p class="purpose">Planner → Executor → Critic, plus optional Challenger.</p>
+      <div class="meta">
+        <div><strong>Clear name:</strong> Agentic stage delivery</div>
+        <div><strong>Technical ID:</strong> MC_agentic_stage</div>
+        <div><strong>Used on:</strong> Stages 2, 3, 7 today</div>
+      </div>
+      <figure>
+        <img src="./figures/greenfield/gf-06-nested-agentic-stage.jpg" alt="Nested agentic stage" />
+      </figure>
+    </section>
   </main>
 
   <footer>
     <a href="./README.md">Modeling README</a> ·
     <a href="./GLOSSARY.md">Glossary</a> ·
-    <a href="./META-COMPOSITION.md">Wrapped process model</a> ·
+    <a href="./META-COMPOSITION.md">Brownfield model</a> ·
+    <a href="./META-COMPOSITION-GREENFIELD.md">Greenfield model</a> ·
     <a href="https://github.com/ResearchAnonymized/TimeArch/tree/main/docs/modeling">GitHub folder</a>
   </footer>
 </body>

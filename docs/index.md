@@ -66,10 +66,10 @@ Treat each team tool as a specialist **worker**. Put a thin **Orchestrator** in 
 
 | Page | Description |
 |------|-------------|
-| [**Figure gallery**](./modeling/gallery.html) | Clear-named brownfield process slides |
-| [Modeling README](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/README.md) | How to read the model |
+| [**Figure gallery**](./modeling/gallery.html) | Brownfield + Greenfield slides |
+| [Brownfield model](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/META-COMPOSITION.md) | TimeArch Brownfield Discovery |
+| [Greenfield model](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/META-COMPOSITION-GREENFIELD.md) | TimeArch Greenfield Architecture Lifecycle |
 | [Glossary](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/GLOSSARY.md) | Clear name ↔ technical ID |
-| [Wrapped process](https://github.com/ResearchAnonymized/TimeArch/blob/main/docs/modeling/META-COMPOSITION.md) | TimeArch Brownfield Discovery |
 
 ## Repo links
 

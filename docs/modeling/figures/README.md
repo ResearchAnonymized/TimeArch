@@ -3,9 +3,12 @@
 Each figure has a **clear title**, a **one-line purpose**, and a short **what to notice** list.  
 Technical IDs are optional; prefer clear names when presenting.
 
-**Gallery (all images):** [../gallery.html](../gallery.html)
+**Gallery (all images):** [../gallery.html](../gallery.html)  
+**Greenfield catalog:** [greenfield/README.md](./greenfield/README.md)
 
 ---
+
+## Brownfield set (01–06)
 
 ## 01 — TimeArch Brownfield Discovery (wrapped process)
 

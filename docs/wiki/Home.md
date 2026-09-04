@@ -67,21 +67,18 @@ Details: [Brownfield Discovery](./Brownfield-Discovery.md)
 
 ## Process modeling (clear names)
 
-Prefer these titles over cryptic codes:
-
-| Clear name | Meaning |
-|------------|---------|
-| **TimeArch Brownfield Discovery** | The whole product as one wrapped process partners see |
-| **System sources** | Code, docs, GitHub inputs |
-| **Requested change** | What to add or modify |
-| **Change Proposal / Build Plan / Agent Pack** | Stakeholder, engineer, and machine outputs |
+| Mode | Clear process name |
+|------|--------------------|
+| **Brownfield** | TimeArch Brownfield Discovery |
+| **Greenfield** | TimeArch Greenfield Architecture Lifecycle |
 
 | Page | Purpose |
 |------|---------|
 | [Modeling README](../modeling/README.md) | Index |
-| [**Figure gallery**](../modeling/gallery.html) | Drawn slides |
+| [**Figure gallery**](../modeling/gallery.html) | Drawn slides (both modes) |
+| [Brownfield catalog](../modeling/figures/README.md) | Figures 01–06 |
+| [Greenfield catalog](../modeling/figures/greenfield/README.md) | Figures gf-01–gf-06 |
 | [Glossary](../modeling/GLOSSARY.md) | Clear name ↔ technical ID |
-| [Wrapped process model](../modeling/META-COMPOSITION.md) | Full narrative |
 
 ---
 

@@ -24,6 +24,8 @@ Use the **Clear name** on slides and GitHub figures. Keep the **Technical ID** f
 
 ## Input packages (what goes into TimeArch)
 
+### Brownfield
+
 | Clear name | Technical ID | Description |
 |------------|--------------|-------------|
 | **System sources** | `IA_sources` | GitHub repo, uploaded ZIP/docs, or demo pack |
@@ -32,9 +34,21 @@ Use the **Clear name** on slides and GitHub figures. Keep the **Technical ID** f
 | **Release approvals** | `IA_gate_approvals` | Requirements · Architecture · Delivery stamps |
 | **Requirements package** *(optional)* | `IA_re_package` | Upstream RE handoff in a multi-team factory |
 
+### Greenfield
+
+| Clear name | Technical ID | Description |
+|------------|--------------|-------------|
+| **Project brief** | `IA_project_brief` | Name, description, mode = greenfield |
+| **Requirements corpus** | `IA_requirements` | SRS/BRD uploads, intake text, structured requirements |
+| **Human stage verdicts** | `IA_human_verdicts` | Accept/dismiss critiques; Challenger triage |
+| **Stakeholder approvals** | `IA_gate_approvals` | Stage 15 sign-offs + architecture package lock |
+| **Requirements package** *(optional)* | `IA_re_package` | Upstream RE handoff |
+
 ---
 
 ## Intermediate packages (inside TimeArch only)
+
+### Brownfield
 
 | Clear name | Technical ID | Description |
 |------------|--------------|-------------|
@@ -48,9 +62,20 @@ Use the **Clear name** on slides and GitHub figures. Keep the **Technical ID** f
 | **Draft handoff** | `OA_dev_handoff` | Combined decisions, criteria, gates (pre-release) |
 | **Pipeline snapshot** | `OA_pipeline_snap` | Saved state so reopen does not force re-analyze |
 
+### Greenfield
+
+| Clear name | Technical ID | Description |
+|------------|--------------|-------------|
+| **Stage artifacts** | `OA_stage_*` | Per-stage analysis / design / validation outputs |
+| **Requirements analysis** | `OA_req_analysis` | Stage 2 structured analysis |
+| **Architecture drivers / style / components…** | (stage artifacts 4–10) | Design packages feeding docs |
+| **Quality / risk / trade-off packs** | (stage artifacts 11–14) | Validation packages |
+
 ---
 
 ## Output packages (what neighbors see)
+
+### Brownfield
 
 | Clear name | Technical ID | Audience | Description |
 |------------|--------------|----------|-------------|
@@ -58,6 +83,19 @@ Use the **Clear name** on slides and GitHub figures. Keep the **Technical ID** f
 | **Build Plan** | `OA_sip` | Engineers | What to implement and how to verify |
 | **Agent Pack JSON** | `OA_agent_pack` | Coding agents / CI | Machine handoff (`agent_pack.json` v4) with `may_implement` |
 | **Case status** | `OA_case_status` | Dashboard / Orchestrator | Milestone phase + draft/approved/closed |
+
+### Greenfield
+
+| Clear name | Technical ID | Audience | Description |
+|------------|--------------|----------|-------------|
+| **SRS** | `OA_srs` | Stakeholders / RE | Software Requirements Specification |
+| **SAD** | `OA_sad` | Architects | Software Architecture Document |
+| **AAR** | `OA_aar` | Review boards | Architecture Assessment Report |
+| **FAP** | `OA_fap` | Enterprise handoff | Full Architecture Package |
+| **Sealed package** | `OA_package_lock` | Governance | Stage 15 `package_locked` |
+| **Implementation scaffolding** | `OA_code_scaffold` | Engineers | Stages 16–17 outputs |
+| **Evolution plan** | `OA_evolution` | Ops / ownership | Stage 18 |
+| **Project lifecycle status** | `OA_case_status` | Dashboard / Orchestrator | Current stage + locks |
 
 ---
 
@@ -102,9 +140,18 @@ Avoid saying only “Meta-composition” on slides. Prefer:
 |------------|--------------|--------------|
 | **TimeArch Brownfield Discovery** | `MC_timearch_brownfield` | System sources + Requested change → Change Proposal, Build Plan, Agent Pack, Case status |
 | **Change analysis** | `MC_change_analysis` | Inventory + Requested change → Draft handoff |
+| **TimeArch Greenfield Architecture Lifecycle** | `MC_timearch_greenfield` | Project brief + Requirements → SRS/SAD/AAR/FAP + Sealed package + Scaffolding |
+| **Agentic stage delivery** | `MC_agentic_stage` | Stage inputs → Reviewed stage artifact (Planner→Executor→Critic) |
+| **Architecture stage challenge loop** | `MC_stage_challenge` | Generator → Challenger → Human → Refine |
 
 ---
 
-## Safety rule (say this on Agent Pack figures)
+## Safety rules
+
+**Brownfield — Agent Pack**
 
 > Coding agents may write code **only if** Agent Pack says **may implement = true** (all human release gates passed).
+
+**Greenfield — Package seal**
+
+> Stages **16–18** (implementation / deploy / evolve) may run **only after** Stage **15** seals the architecture package.
