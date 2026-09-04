@@ -1,10 +1,10 @@
 ---
 layout: default
-title: ANSE — Artifact-Driven Autonomous Software Engineering
+title: ANSE
 permalink: /wiki/ANSE.html
 ---
 
-# ANSE — Artifact-Driven Autonomous Software Engineering
+# ANSE
 
 ANSE is an AI-native software engineering toolchain for autonomous development across the complete lifecycle. Tools collaborate through **explicit engineering artifacts**, coordinated by **KERKIS**.
 
